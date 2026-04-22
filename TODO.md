@@ -15,7 +15,7 @@ For actionable tickets with assignees and delivery dates, prefer GitHub Issues l
 | API routes | Not implemented yet |
 | Database schema | Not implemented yet |
 | Tests | Not implemented yet |
-| Auth / roles / approvals | Not implemented yet |
+| Auth / roles / approvals | Authorization policy layer is in progress; SSO is not implemented yet |
 
 This means the project is still at the foundation and backend design stage.
 
@@ -45,13 +45,14 @@ These should be built before template-specific features.
 - [x] Create `users` model
 - [x] Define role model for Product Manager, Finance Manager, General Manager, COO, CEO, Marketing, Cluster Manager, KD, SPDM, Admin
 - [ ] Decide auth approach: internal login, SSO, or seeded admin accounts (SSO Login using microsoft)
-- [ ] Add authorization rules for create, submit, review, approve, and archive actions
+- [x] Add authorization rules for create, submit, review, approve, and archive actions
 
 ### Products and workflow
 
 - [x] Create `products` module as the root aggregate
 - [x] Add product fields such as working name, brand, category, current stage, and lifecycle status
 - [x] Add record-level owner assignments for product, commercial, finance, marketing, and cluster ownership
+- [x] Scope product listing and product access by role plus assignment
 - [ ] Create workflow / stage transition module
 - [ ] Enforce valid stage progression rules in the service layer
 - [ ] Support draft, submitted, approved, rejected, blocked, and archived states where relevant

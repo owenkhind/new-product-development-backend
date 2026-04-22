@@ -7,6 +7,7 @@ import type { ProductBrand } from '../../../enums/product-brand.enum';
 import type { ProductCategory } from '../../../enums/product-category.enum';
 import type { ProductStage } from '../../../enums/product-stage.enum';
 import type { ProductStatus } from '../../../enums/product-status.enum';
+import { UserRole } from '../../../enums/user-role.enum';
 import type { ProductRecord } from '../types/product-record.type';
 
 type ProductRow = QueryResultRow & {
@@ -44,6 +45,8 @@ type CreateProductInput = {
 };
 
 type ListProductsFilters = {
+  actorId: string;
+  actorRole: UserRole;
   brand?: ProductBrand;
   category?: ProductCategory;
   limit: number;
@@ -153,6 +156,24 @@ export class ProductsRepository {
   async list(filters: ListProductsFilters): Promise<{ rows: ProductRecord[]; total: number }> {
     const whereClauses: string[] = [];
     const params: unknown[] = [];
+
+    if (!this.hasGlobalProductViewAccess(filters.actorRole)) {
+      params.push(filters.actorId);
+      whereClauses.push(`
+        (
+          product.product_owner_user_id = $${params.length}
+          OR product.commercial_owner_user_id = $${params.length}
+          OR product.finance_owner_user_id = $${params.length}
+          OR product.marketing_owner_user_id = $${params.length}
+          OR EXISTS (
+            SELECT 1
+            FROM ${this.clusterAssignmentsTableName} access_cluster_assignment
+            WHERE access_cluster_assignment.product_id = product.id
+              AND access_cluster_assignment.user_id = $${params.length}
+          )
+        )
+      `);
+    }
 
     if (filters.brand) {
       params.push(filters.brand);
@@ -326,6 +347,15 @@ export class ProductsRepository {
     } finally {
       client.release();
     }
+  }
+
+  private hasGlobalProductViewAccess(role: UserRole): boolean {
+    return [
+      UserRole.ADMIN,
+      UserRole.HEAD_OF_PRODUCT,
+      UserRole.QA_TSD_REVIEWER,
+      UserRole.COO_EXECUTIVE_APPROVER,
+    ].includes(role);
   }
 
   private buildSelectQuery(suffix: string): string {

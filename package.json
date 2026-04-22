@@ -14,8 +14,8 @@
     "start:debug": "nest start --debug --watch",
     "lint": "tsc --noEmit -p tsconfig.json",
     "format": "prettier --write .",
-    "test": "node --import tsx --test src/**/*.spec.ts",
-    "test:watch": "node --import tsx --test --watch src/**/*.spec.ts",
+    "test": "find src -name '*.spec.ts' -print0 | xargs -0 node --import tsx --test",
+    "test:watch": "find src -name '*.spec.ts' -print0 | xargs -0 node --import tsx --test --watch",
     "test:cov": "npm test",
     "test:e2e": "node --import tsx --test test/**/*.e2e-spec.ts"
   },

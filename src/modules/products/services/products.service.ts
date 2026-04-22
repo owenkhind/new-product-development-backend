@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { UserRole } from '../../../enums/user-role.enum';
 import { ProductStage } from '../../../enums/product-stage.enum';
 import { ProductStatus } from '../../../enums/product-status.enum';
+import type { AuthenticatedUser } from '../../../types/authenticated-user.type';
 import { UsersRepository } from '../../users/repositories/users.repository';
 import type { CreateProductDto } from '../dto/create-product.dto';
 import type { ListProductsQueryDto } from '../dto/list-products-query.dto';
@@ -62,11 +63,16 @@ export class ProductsService {
     });
   }
 
-  async findAll(query: ListProductsQueryDto): Promise<{ rows: ProductRecord[]; total: number }> {
+  async findAll(
+    query: ListProductsQueryDto,
+    actor: AuthenticatedUser,
+  ): Promise<{ rows: ProductRecord[]; total: number }> {
     const limit = Math.min(query.limit, 100);
     const offset = (query.page - 1) * limit;
 
     return this.productsRepository.list({
+      actorId: actor.id,
+      actorRole: actor.role,
       brand: query.brand,
       category: query.category,
       limit,
