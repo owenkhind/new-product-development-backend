@@ -14,10 +14,10 @@
     "start:debug": "nest start --debug --watch",
     "lint": "tsc --noEmit -p tsconfig.json",
     "format": "prettier --write .",
-    "test": "find src -name '*.spec.ts' -print0 | xargs -0 node --import tsx --test",
-    "test:watch": "find src -name '*.spec.ts' -print0 | xargs -0 node --import tsx --test --watch",
+    "test": "find test -name '*.spec.ts' ! -name '*.e2e-spec.ts' -print0 | xargs -0 node --import tsx --test",
+    "test:watch": "find test -name '*.spec.ts' ! -name '*.e2e-spec.ts' -print0 | xargs -0 node --import tsx --test --watch",
     "test:cov": "npm test",
-    "test:e2e": "node --import tsx --test test/**/*.e2e-spec.ts"
+    "test:e2e": "find test -name '*.e2e-spec.ts' -print0 | xargs -0 node --import tsx --test"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.6",

@@ -37,9 +37,13 @@ Follow this sequence every time:
 2. Identify the write model, read model, permissions, invariants, and failure modes.
 3. Design the database access pattern before writing controllers.
 4. Keep controllers thin, DTOs strict, services focused, and repositories explicit.
-5. Generate tests in the same pass as the feature.
-6. Add concise inline comments for business rules, non-obvious design choices, and performance-sensitive code.
-7. Critique the design before finalizing it. Remove duplication, over-coupling, and unnecessary abstractions.
+5. Generate tests in the same pass as the feature and place them under the root `test/` folder, not inside feature source folders.
+6. Cover the feature thoroughly before considering it done. Include all realistic success paths, validation failures, authorization failures, not-found cases, conflicts, invalid workflow states, rollback behavior, and boundary conditions that apply to the slice.
+7. Run the relevant test suites after implementation. If any test fails, fix the feature or the test before moving on.
+8. Only after the feature code and tests are passing should the work be committed and pushed.
+9. Follow `skills/CODING_STANDARDS.md` for commit naming, branch naming when branches are used, and git hygiene.
+10. Add concise inline comments for business rules, non-obvious design choices, and performance-sensitive code.
+11. Critique the design before finalizing it. Remove duplication, over-coupling, and unnecessary abstractions.
 
 If the request is underspecified but the feature is still clear enough to implement, proceed with reasonable defaults instead of stalling.
 If a request touches stage transitions, approvals, pricing floors, or template interpretation, check `references/plm-domain.md` first and call out any conflicting rules before locking in the implementation.
@@ -187,6 +191,13 @@ When the user asks for user or approval logic, use the role and assignment model
 ## Testing contract
 Always generate tests for the created or modified feature.
 
+Feature completion rule for this project:
+
+- a feature is not complete until its test coverage is added under `test/`
+- the tests cover all meaningful scenarios for that feature
+- the relevant test commands pass locally
+- the change is then committed and pushed following `skills/CODING_STANDARDS.md`
+
 ### Minimum test bar
 Generate both of these unless the user explicitly asks for less:
 
@@ -205,6 +216,9 @@ Cover the most important paths:
 - workflow transition rejection when state changes are invalid
 - formula and policy enforcement for ART scoring, GP floors, channel counts, or auto-escalation rules when relevant
 - performance-sensitive batching behavior when the logic could accidentally regress into N+1
+- empty or partial inputs where DTO rules or defaults matter
+- role plus assignment combinations where access depends on both
+- admin override behavior when the feature supports delegated or support actions
 
 ### Test style
 - Use arrange, act, assert structure.
@@ -213,6 +227,7 @@ Cover the most important paths:
 - Mock at the boundary, not everywhere.
 - Avoid brittle tests that assert implementation noise.
 - When testing service loops, assert repository call counts if that helps catch hidden per-item queries.
+- Keep test files centralized under `test/unit`, `test/e2e`, or `test/helpers` as appropriate.
 
 ## Inline comment rules
 Add inline comments, but do it with discipline.
@@ -237,6 +252,7 @@ When using this skill to generate or refactor code:
 5. Preserve consistency with the existing codebase when the project already has conventions.
 6. Call out real tradeoffs or unresolved risks briefly instead of pretending the design is perfect.
 7. Prefer a clean first version over speculative extensibility.
+8. If the user wants the work finalized in git, run the tests first, then commit and push only after they pass.
 
 ## Backend design checklist
 Before finalizing an answer, verify all of these:
