@@ -5,6 +5,8 @@ export enum StageAction {
   APPROVE = 'APPROVE',
   REJECT = 'REJECT',
   REOPEN = 'REOPEN',
+  BLOCK = 'BLOCK',
+  ARCHIVE = 'ARCHIVE',
   VIEW = 'VIEW',
   ASSIGN = 'ASSIGN',
   COMMENT = 'COMMENT',

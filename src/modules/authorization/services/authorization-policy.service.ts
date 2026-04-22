@@ -34,6 +34,13 @@ export class AuthorizationPolicyService {
       case PolicyResource.PRODUCTS:
         await this.assertProductsAccess(input);
         return;
+      case PolicyResource.WORKFLOW:
+        await this.assertWorkflowAccess(input);
+        return;
+      case PolicyResource.GATE_DECISIONS:
+      case PolicyResource.AUDIT_LOGS:
+        await this.assertProductScopedViewAccess(input);
+        return;
       default:
         throw new ForbiddenException({
           code: 'AUTHORIZATION_RULE_NOT_IMPLEMENTED',
@@ -104,6 +111,69 @@ export class AuthorizationPolicyService {
     throw this.productActionForbidden(input.action, input.actor.role);
   }
 
+  private async assertWorkflowAccess(input: AuthorizationInput): Promise<void> {
+    const product = await this.getProductOrThrow(input.targetId);
+
+    switch (input.action) {
+      case StageAction.SUBMIT:
+        if (product.productOwnerUserId === input.actor.id) {
+          return;
+        }
+
+        break;
+      case StageAction.APPROVE:
+      case StageAction.REJECT:
+      case StageAction.REOPEN:
+      case StageAction.BLOCK:
+      case StageAction.ARCHIVE:
+        if (this.canManageWorkflowStage(input.actor, product, input.action)) {
+          return;
+        }
+
+        break;
+      default:
+        break;
+    }
+
+    throw new ForbiddenException({
+      code: 'WORKFLOW_ACTION_FORBIDDEN',
+      message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} this workflow stage.`,
+    });
+  }
+
+  private async assertProductScopedViewAccess(input: AuthorizationInput): Promise<void> {
+    const product = await this.getProductOrThrow(input.targetId);
+
+    if (
+      this.hasGlobalProductViewAccess(input.actor.role) ||
+      this.isAssignedProductContributor(input.actor, product)
+    ) {
+      return;
+    }
+
+    throw this.productActionForbidden(StageAction.VIEW, input.actor.role);
+  }
+
+  private async getProductOrThrow(productId?: string): Promise<ProductRecord> {
+    if (!productId) {
+      throw new ForbiddenException({
+        code: 'PRODUCT_TARGET_REQUIRED',
+        message: 'This action requires a target product.',
+      });
+    }
+
+    const product = await this.productsRepository.findById(productId);
+
+    if (!product) {
+      throw new NotFoundException({
+        code: 'PRODUCT_NOT_FOUND',
+        message: `Product ${productId} was not found.`,
+      });
+    }
+
+    return product;
+  }
+
   private hasGlobalProductViewAccess(role: UserRole): boolean {
     return [
       UserRole.HEAD_OF_PRODUCT,
@@ -131,6 +201,44 @@ export class AuthorizationPolicyService {
         return product.marketingOwnerUserId === actor.id;
       case UserRole.CLUSTER_MANAGER:
         return product.clusterOwnerUserIds.includes(actor.id);
+      default:
+        return false;
+    }
+  }
+
+  private canManageWorkflowStage(
+    actor: AuthenticatedUser,
+    product: ProductRecord,
+    action: StageAction,
+  ): boolean {
+    switch (product.currentStage) {
+      case 'STAGE_1':
+        return actor.role === UserRole.HEAD_OF_PRODUCT;
+      case 'STAGE_2':
+        return (
+          actor.role === UserRole.GM_COMMERCIAL_OWNER ||
+          actor.role === UserRole.COO_EXECUTIVE_APPROVER
+        );
+      case 'STAGE_3':
+        return (
+          actor.role === UserRole.HEAD_OF_PRODUCT ||
+          actor.role === UserRole.GM_COMMERCIAL_OWNER
+        );
+      case 'STAGE_4':
+        return (
+          actor.role === UserRole.GM_COMMERCIAL_OWNER ||
+          actor.role === UserRole.COO_EXECUTIVE_APPROVER
+        );
+      case 'STAGE_5':
+        return (
+          actor.role === UserRole.GM_COMMERCIAL_OWNER ||
+          actor.role === UserRole.COO_EXECUTIVE_APPROVER
+        );
+      case 'STAGE_6':
+        return (
+          actor.role === UserRole.COO_EXECUTIVE_APPROVER ||
+          (action === StageAction.REOPEN && actor.role === UserRole.GM_COMMERCIAL_OWNER)
+        );
       default:
         return false;
     }

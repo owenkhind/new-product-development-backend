@@ -1,4 +1,7 @@
 export enum PolicyResource {
   PRODUCTS = 'PRODUCTS',
   USERS = 'USERS',
+  WORKFLOW = 'WORKFLOW',
+  GATE_DECISIONS = 'GATE_DECISIONS',
+  AUDIT_LOGS = 'AUDIT_LOGS',
 }

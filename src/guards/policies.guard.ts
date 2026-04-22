@@ -50,7 +50,7 @@ export class PoliciesGuard implements CanActivate {
       action: rule.action,
       actor,
       resource: rule.resource,
-      targetId: this.getRouteParam(request.params.id),
+      targetId: this.getTargetId(request.params),
     });
 
     return true;
@@ -109,6 +109,10 @@ export class PoliciesGuard implements CanActivate {
     const headerValue = Array.isArray(value) ? value[0] : value;
 
     return headerValue === 'true' || headerValue === '1';
+  }
+
+  private getTargetId(params: Record<string, string | string[] | undefined>): string | undefined {
+    return this.getRouteParam(params.productId ?? params.id);
   }
 
   private getRouteParam(value: string | string[] | undefined): string | undefined {

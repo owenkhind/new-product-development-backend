@@ -15,7 +15,7 @@ For actionable tickets with assignees and delivery dates, prefer GitHub Issues l
 | API routes | Not implemented yet |
 | Database schema | Not implemented yet |
 | Tests | Not implemented yet |
-| Auth / roles / approvals | Authorization policy layer is in progress; SSO is not implemented yet |
+| Auth / roles / approvals | Authorization policy, workflow transitions, and approval traceability are scaffolded; SSO is not implemented yet |
 
 This means the project is still at the foundation and backend design stage.
 
@@ -53,15 +53,15 @@ These should be built before template-specific features.
 - [x] Add product fields such as working name, brand, category, current stage, and lifecycle status
 - [x] Add record-level owner assignments for product, commercial, finance, marketing, and cluster ownership
 - [x] Scope product listing and product access by role plus assignment
-- [ ] Create workflow / stage transition module
-- [ ] Enforce valid stage progression rules in the service layer
-- [ ] Support draft, submitted, approved, rejected, blocked, and archived states where relevant
+- [x] Create workflow / stage transition module
+- [x] Enforce valid stage progression rules in the service layer
+- [x] Support draft, submitted, approved, rejected, blocked, and archived states where relevant
 
 ### Approvals and auditability
 
-- [ ] Create `gate_decisions` module
-- [ ] Create append-only approval records with actor, outcome, comment, and timestamp
-- [ ] Create `audit_logs` module for important lifecycle actions
+- [x] Create `gate_decisions` module
+- [x] Create append-only approval records with actor, outcome, comment, and timestamp
+- [x] Create `audit_logs` module for important lifecycle actions
 - [ ] Decide whether approval signatures are metadata only or first-class workflow actions
 
 ### Supporting modules

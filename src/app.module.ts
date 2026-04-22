@@ -4,9 +4,12 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { envValidationSchema } from './config/env.validation';
 import { RequestIdMiddleware } from './middleware/request-id.middleware';
+import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
+import { GateDecisionsModule } from './modules/gate-decisions/gate-decisions.module';
 import { HealthModule } from './modules/health/health.module';
 import { ProductsModule } from './modules/products/products.module';
 import { UsersModule } from './modules/users/users.module';
+import { WorkflowModule } from './modules/workflow/workflow.module';
 
 @Module({
   imports: [
@@ -16,9 +19,12 @@ import { UsersModule } from './modules/users/users.module';
       validationSchema: envValidationSchema,
     }),
     DatabaseModule,
+    AuditLogsModule,
+    GateDecisionsModule,
     HealthModule,
     ProductsModule,
     UsersModule,
+    WorkflowModule,
   ],
 })
 export class AppModule implements NestModule {

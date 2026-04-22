@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { PoolClient, QueryResultRow } from 'pg';
 
+import type { DatabaseQueryable } from '../../../database/database-queryable.type';
 import { DatabaseService } from '../../../database/database.service';
 import { qualifyTableName } from '../../../database/database-schema.util';
 import type { ProductBrand } from '../../../enums/product-brand.enum';
@@ -232,11 +233,19 @@ export class ProductsRepository {
     };
   }
 
-  async update(id: string, input: UpdateProductInput): Promise<ProductRecord | null> {
-    const client = await this.databaseService.getClient();
+  async update(
+    id: string,
+    input: UpdateProductInput,
+    executor?: DatabaseQueryable,
+  ): Promise<ProductRecord | null> {
+    const client = executor ?? (await this.databaseService.getClient());
+    const shouldReleaseClient = !executor;
+    const shouldManageTransaction = !executor;
 
     try {
-      await client.query('BEGIN');
+      if (shouldManageTransaction) {
+        await client.query('BEGIN');
+      }
 
       const updates: string[] = [];
       const params: unknown[] = [];
@@ -310,7 +319,9 @@ export class ProductsRepository {
         );
 
         if (updateResult.rows.length === 0) {
-          await client.query('ROLLBACK');
+          if (shouldManageTransaction) {
+            await client.query('ROLLBACK');
+          }
           return null;
         }
       } else {
@@ -320,13 +331,15 @@ export class ProductsRepository {
         );
 
         if (existingResult.rows.length === 0) {
-          await client.query('ROLLBACK');
+          if (shouldManageTransaction) {
+            await client.query('ROLLBACK');
+          }
           return null;
         }
       }
 
       if (input.clusterOwnerUserIds !== undefined) {
-        await this.replaceClusterAssignments(client, id, input.clusterOwnerUserIds);
+        await this.replaceClusterAssignments(client as PoolClient, id, input.clusterOwnerUserIds);
       }
 
       const result = await client.query<ProductRow>(
@@ -338,14 +351,20 @@ export class ProductsRepository {
         [id],
       );
 
-      await client.query('COMMIT');
+      if (shouldManageTransaction) {
+        await client.query('COMMIT');
+      }
 
       return result.rows[0] ? this.mapRow(result.rows[0]) : null;
     } catch (error) {
-      await client.query('ROLLBACK');
+      if (shouldManageTransaction) {
+        await client.query('ROLLBACK');
+      }
       throw error;
     } finally {
-      client.release();
+      if (shouldReleaseClient && 'release' in client && typeof client.release === 'function') {
+        client.release();
+      }
     }
   }
 
