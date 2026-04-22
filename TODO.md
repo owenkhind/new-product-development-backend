@@ -62,7 +62,7 @@ These should be built before template-specific features.
 - [x] Create `gate_decisions` module
 - [x] Create append-only approval records with actor, outcome, comment, and timestamp
 - [x] Create `audit_logs` module for important lifecycle actions
-- [ ] Decide whether approval signatures are metadata only or first-class workflow actions
+- [x] Treat approvals as first-class workflow actions; no separate signature artifact is required
 
 ### Supporting modules
 
@@ -78,32 +78,32 @@ Stage 1 should be the first real business slice implemented end-to-end.
 
 ### Template 1 - Product Opportunity Brief
 
-- [ ] Create schema for Product Opportunity Brief
-- [ ] Add `POST /v1/products/:productId/opportunity-brief`
-- [ ] Add `GET /v1/products/:productId/opportunity-brief`
+- [x] Create schema for Product Opportunity Brief
+- [x] Add `POST /v1/products/:productId/opportunity-brief`
+- [x] Add `GET /v1/products/:productId/opportunity-brief`
 - [ ] Validate opportunity source, target product inputs, and compliance fields
-- [ ] Implement ART score capture for 9 criteria
+- [x] Implement ART score capture for 9 criteria
 - [ ] Resolve or confirm the threshold ambiguity in the source template (`/18` vs `Min 6/9`)
 
 ### Template 2 - Market Sizing
 
-- [ ] Create schema for Market Sizing
-- [ ] Add create and read endpoints
+- [x] Create schema for Market Sizing
+- [x] Add create and read endpoints
 - [ ] Support category market size, price segments, projections, and data sources
 
 ### Template 3 - Competitor Matrix / Shootout
 
-- [ ] Create schema for Competitor Matrix
-- [ ] Add create and read endpoints
-- [ ] Support minimum 3 competitors
+- [x] Create schema for Competitor Matrix
+- [x] Add create and read endpoints
+- [x] Support minimum 3 competitors
 - [ ] Support feature comparison and scorecard summary
 
 ### Gate 1
 
-- [ ] Add Gate 1 submission flow
+- [x] Add Gate 1 submission flow
 - [ ] Add Gate 1 approval / rework / kill decision endpoint
-- [ ] Prevent stage progression without required Stage 1 templates
-- [ ] Record audit event on Gate 1 decision
+- [x] Prevent stage progression without required Stage 1 templates
+- [x] Record audit event on Gate 1 decision
 
 ---
 

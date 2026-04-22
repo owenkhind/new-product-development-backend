@@ -13,6 +13,7 @@ import { GateDecisionsRepository } from '../../gate-decisions/repositories/gate-
 import type { GateDecisionRecord } from '../../gate-decisions/types/gate-decision-record.type';
 import { ProductsRepository } from '../../products/repositories/products.repository';
 import type { ProductRecord } from '../../products/types/product-record.type';
+import { StageOneCompletionService } from './stage-one-completion.service';
 
 type WorkflowTransitionResult = {
   auditLog: AuditLogRecord;
@@ -32,6 +33,7 @@ export class ProductWorkflowService {
     private readonly productsRepository: ProductsRepository,
     private readonly gateDecisionsRepository: GateDecisionsRepository,
     private readonly auditLogsRepository: AuditLogsRepository,
+    private readonly stageOneCompletionService: StageOneCompletionService,
   ) {}
 
   async transition(
@@ -55,6 +57,8 @@ export class ProductWorkflowService {
         message: 'Admin support overrides must include an overrideReason.',
       });
     }
+
+    await this.assertStageRequirements(product, action);
 
     const nextState = this.resolveNextState(product, action);
     const client = await this.databaseService.getClient();
@@ -197,6 +201,18 @@ export class ProductWorkflowService {
           code: 'WORKFLOW_ACTION_INVALID',
           message: `Unsupported workflow action ${action}.`,
         });
+    }
+  }
+
+  private async assertStageRequirements(
+    product: ProductRecord,
+    action: WorkflowTransitionAction,
+  ): Promise<void> {
+    if (
+      product.currentStage === ProductStage.STAGE_1 &&
+      (action === WorkflowTransitionAction.SUBMIT || action === WorkflowTransitionAction.APPROVE)
+    ) {
+      await this.stageOneCompletionService.assertReadyForGateOne(product.id);
     }
   }
 

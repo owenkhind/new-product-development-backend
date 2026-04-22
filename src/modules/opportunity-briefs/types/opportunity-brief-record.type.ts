@@ -1,0 +1,23 @@
+export type OpportunityBriefRecord = {
+  affordableCostScore: number;
+  affordablePriceScore: number;
+  affordableValueScore: number;
+  artTotalScore: number;
+  complianceNotes: string | null;
+  createdAt: Date;
+  id: string;
+  opportunitySource: string;
+  problemStatement: string;
+  productId: string;
+  reliableComplianceScore: number;
+  reliableDurabilityScore: number;
+  reliableServiceScore: number;
+  requiredDocumentsComplete: boolean;
+  targetCustomer: string;
+  targetMarket: string;
+  trendyCategoryScore: number;
+  trendyColourScore: number;
+  trendyDesignScore: number;
+  uniqueSellingPoints: string[];
+  updatedAt: Date;
+};

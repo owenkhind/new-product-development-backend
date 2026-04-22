@@ -93,6 +93,7 @@ describe('ProductWorkflowService', () => {
     product?: ReturnType<typeof createProductRecord>;
     productUpdate?: (input: { currentStage: ProductStage; status: ProductStatus }) => Promise<unknown>;
     query?: (text: string) => Promise<{ rows: never[] }>;
+    stageOneAssert?: (productId: string) => Promise<void>;
   }): ProductWorkflowService {
     const product = options?.product ?? createProductRecord();
 
@@ -133,6 +134,9 @@ describe('ProductWorkflowService', () => {
               action: input.action,
               entityType: AuditEntityType.PRODUCT,
             })),
+      } as never,
+      {
+        assertReadyForGateOne: options?.stageOneAssert ?? (async () => undefined),
       } as never,
     );
   }
@@ -219,6 +223,47 @@ describe('ProductWorkflowService', () => {
     assert.equal(stageSixResult.product.status, ProductStatus.APPROVED);
   });
 
+  it('requires Stage 1 completion before submit or approve can proceed', async () => {
+    const incompleteError = new BadRequestException({
+      code: 'STAGE_ONE_REQUIREMENTS_INCOMPLETE',
+      message: 'Stage 1 is incomplete and cannot progress through Gate 1.',
+    });
+
+    await assert.rejects(
+      createService({
+        product: createProductRecord({
+          currentStage: ProductStage.STAGE_1,
+          status: ProductStatus.DRAFT,
+        }),
+        stageOneAssert: async () => {
+          throw incompleteError;
+        },
+      }).transition(testIds.product, WorkflowTransitionAction.SUBMIT, actor, {}),
+      incompleteError,
+    );
+
+    await assert.rejects(
+      createService({
+        product: createProductRecord({
+          currentStage: ProductStage.STAGE_1,
+          status: ProductStatus.IN_REVIEW,
+        }),
+        stageOneAssert: async () => {
+          throw incompleteError;
+        },
+      }).transition(
+        testIds.product,
+        WorkflowTransitionAction.APPROVE,
+        {
+          id: testIds.headOfProduct,
+          role: UserRole.HEAD_OF_PRODUCT,
+        },
+        {},
+      ),
+      incompleteError,
+    );
+  });
+
   it('supports reject, reopen, block, and archive transitions', async () => {
     const rejectResult = await createService({
       product: createProductRecord({
@@ -276,6 +321,7 @@ describe('ProductWorkflowService', () => {
       {
         findById: async () => null,
       } as never,
+      {} as never,
       {} as never,
       {} as never,
     );
