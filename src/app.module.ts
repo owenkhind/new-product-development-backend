@@ -5,6 +5,7 @@ import { DatabaseModule } from './database/database.module';
 import { envValidationSchema } from './config/env.validation';
 import { RequestIdMiddleware } from './middleware/request-id.middleware';
 import { HealthModule } from './modules/health/health.module';
+import { ProductsModule } from './modules/products/products.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -16,6 +17,7 @@ import { UsersModule } from './modules/users/users.module';
     }),
     DatabaseModule,
     HealthModule,
+    ProductsModule,
     UsersModule,
   ],
 })

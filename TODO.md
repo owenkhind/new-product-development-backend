@@ -49,8 +49,9 @@ These should be built before template-specific features.
 
 ### Products and workflow
 
-- [ ] Create `products` module as the root aggregate
-- [ ] Add product fields such as working name, brand, category, current stage, and lifecycle status
+- [x] Create `products` module as the root aggregate
+- [x] Add product fields such as working name, brand, category, current stage, and lifecycle status
+- [x] Add record-level owner assignments for product, commercial, finance, marketing, and cluster ownership
 - [ ] Create workflow / stage transition module
 - [ ] Enforce valid stage progression rules in the service layer
 - [ ] Support draft, submitted, approved, rejected, blocked, and archived states where relevant
