@@ -37,6 +37,12 @@ export class AuthorizationPolicyService {
       case PolicyResource.WORKFLOW:
         await this.assertWorkflowAccess(input);
         return;
+      case PolicyResource.GATE_WORKFLOW:
+        await this.assertGateWorkflowAccess(input);
+        return;
+      case PolicyResource.GATE_TWO_REVIEWS:
+        await this.assertGateTwoReviewAccess(input);
+        return;
       case PolicyResource.GATE_DECISIONS:
       case PolicyResource.AUDIT_LOGS:
         await this.assertProductScopedViewAccess(input);
@@ -115,18 +121,10 @@ export class AuthorizationPolicyService {
     const product = await this.getProductOrThrow(input.targetId);
 
     switch (input.action) {
-      case StageAction.SUBMIT:
-        if (product.productOwnerUserId === input.actor.id) {
-          return;
-        }
-
-        break;
-      case StageAction.APPROVE:
-      case StageAction.REJECT:
       case StageAction.REOPEN:
       case StageAction.BLOCK:
       case StageAction.ARCHIVE:
-        if (this.canManageWorkflowStage(input.actor, product, input.action)) {
+        if (this.canManageGenericWorkflow(input.actor, product, input.action)) {
           return;
         }
 
@@ -138,6 +136,103 @@ export class AuthorizationPolicyService {
     throw new ForbiddenException({
       code: 'WORKFLOW_ACTION_FORBIDDEN',
       message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} this workflow stage.`,
+    });
+  }
+
+  private async assertGateWorkflowAccess(input: AuthorizationInput): Promise<void> {
+    const product = await this.getProductOrThrow(input.targetId);
+
+    switch (product.currentStage) {
+      case 'STAGE_1':
+        if (
+          input.action === StageAction.SUBMIT &&
+          product.productOwnerUserId === input.actor.id
+        ) {
+          return;
+        }
+
+        if (
+          [StageAction.APPROVE, StageAction.REJECT, StageAction.KILL].includes(input.action) &&
+          input.actor.role === UserRole.HEAD_OF_PRODUCT
+        ) {
+          return;
+        }
+
+        break;
+      case 'STAGE_2':
+        if (
+          input.action === StageAction.SUBMIT &&
+          product.productOwnerUserId === input.actor.id
+        ) {
+          return;
+        }
+
+        if (
+          input.action === StageAction.APPROVE &&
+          input.actor.role === UserRole.COO_EXECUTIVE_APPROVER
+        ) {
+          return;
+        }
+
+        if (
+          input.action === StageAction.REJECT &&
+          [UserRole.GM_COMMERCIAL_OWNER, UserRole.COO_EXECUTIVE_APPROVER].includes(input.actor.role)
+        ) {
+          return;
+        }
+
+        if (
+          input.action === StageAction.KILL &&
+          input.actor.role === UserRole.COO_EXECUTIVE_APPROVER
+        ) {
+          return;
+        }
+
+        break;
+      default:
+        break;
+    }
+
+    throw new ForbiddenException({
+      code: 'GATE_WORKFLOW_ACTION_FORBIDDEN',
+      message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} this gate stage.`,
+    });
+  }
+
+  private async assertGateTwoReviewAccess(input: AuthorizationInput): Promise<void> {
+    const product = await this.getProductOrThrow(input.targetId);
+
+    if (product.currentStage !== 'STAGE_2') {
+      throw new ForbiddenException({
+        code: 'GATE_TWO_REVIEW_STAGE_INVALID',
+        message: 'Gate 2 reviews can only be updated while the product is in Stage 2.',
+      });
+    }
+
+    if (
+      input.action === StageAction.REVIEW &&
+      input.actor.role === UserRole.QA_TSD_REVIEWER
+    ) {
+      return;
+    }
+
+    if (
+      input.action === StageAction.CONFIRM &&
+      input.actor.role === UserRole.FINANCE_MANAGER
+    ) {
+      return;
+    }
+
+    if (
+      input.action === StageAction.APPROVE &&
+      input.actor.role === UserRole.GM_COMMERCIAL_OWNER
+    ) {
+      return;
+    }
+
+    throw new ForbiddenException({
+      code: 'GATE_TWO_REVIEW_ACTION_FORBIDDEN',
+      message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} Gate 2 reviews.`,
     });
   }
 
@@ -206,19 +301,12 @@ export class AuthorizationPolicyService {
     }
   }
 
-  private canManageWorkflowStage(
+  private canManageGenericWorkflow(
     actor: AuthenticatedUser,
     product: ProductRecord,
     action: StageAction,
   ): boolean {
     switch (product.currentStage) {
-      case 'STAGE_1':
-        return actor.role === UserRole.HEAD_OF_PRODUCT;
-      case 'STAGE_2':
-        return (
-          actor.role === UserRole.GM_COMMERCIAL_OWNER ||
-          actor.role === UserRole.COO_EXECUTIVE_APPROVER
-        );
       case 'STAGE_3':
         return (
           actor.role === UserRole.HEAD_OF_PRODUCT ||

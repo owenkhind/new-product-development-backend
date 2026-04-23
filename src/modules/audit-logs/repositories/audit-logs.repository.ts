@@ -4,13 +4,13 @@ import type { QueryResultRow } from 'pg';
 import type { DatabaseQueryable } from '../../../database/database-queryable.type';
 import { DatabaseService } from '../../../database/database.service';
 import { qualifyTableName } from '../../../database/database-schema.util';
+import type { AuditAction } from '../../../enums/audit-action.enum';
 import type { AuditEntityType } from '../../../enums/audit-entity-type.enum';
-import type { WorkflowTransitionAction } from '../../../enums/workflow-transition-action.enum';
 import type { AuditLogRecord } from '../types/audit-log-record.type';
 
 type AuditLogRow = QueryResultRow & {
   acting_as_user_id: string | null;
-  action: WorkflowTransitionAction;
+  action: AuditAction;
   actor_user_id: string;
   created_at: Date;
   entity_id: string;
@@ -24,7 +24,7 @@ type AuditLogRow = QueryResultRow & {
 
 type CreateAuditLogInput = {
   actingAsUserId: string | null;
-  action: WorkflowTransitionAction;
+  action: AuditAction;
   actorUserId: string;
   entityId: string;
   entityType: AuditEntityType;

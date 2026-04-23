@@ -5,6 +5,8 @@ import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 
 import { PoliciesGuard } from '../../src/guards/policies.guard';
 import { PolicyResource } from '../../src/enums/policy-resource.enum';
+import { ProductStage } from '../../src/enums/product-stage.enum';
+import { ProductStatus } from '../../src/enums/product-status.enum';
 import { StageAction } from '../../src/enums/stage-action.enum';
 import { UserRole } from '../../src/enums/user-role.enum';
 import { AuthorizationPolicyService } from '../../src/modules/authorization/services/authorization-policy.service';
@@ -119,25 +121,17 @@ describe('AuthorizationPolicyService', () => {
     const service = new AuthorizationPolicyService(
       {} as never,
       {
-        findById: async () => product,
+        findById: async () =>
+          createProductRecord({
+            currentStage: ProductStage.STAGE_3,
+            status: ProductStatus.REJECTED,
+          }),
       } as never,
     );
 
     await assert.doesNotReject(
       service.assertAuthorized({
-        action: StageAction.SUBMIT,
-        actor: {
-          id: testIds.productOwner,
-          role: UserRole.PRODUCT_MANAGER,
-        },
-        resource: PolicyResource.WORKFLOW,
-        targetId: product.id,
-      }),
-    );
-
-    await assert.doesNotReject(
-      service.assertAuthorized({
-        action: StageAction.APPROVE,
+        action: StageAction.REOPEN,
         actor: {
           id: testIds.headOfProduct,
           role: UserRole.HEAD_OF_PRODUCT,
@@ -149,12 +143,153 @@ describe('AuthorizationPolicyService', () => {
 
     await assert.rejects(
       service.assertAuthorized({
+        action: StageAction.REOPEN,
+        actor: {
+          id: testIds.productOwner,
+          role: UserRole.PRODUCT_MANAGER,
+        },
+        resource: PolicyResource.WORKFLOW,
+        targetId: product.id,
+      }),
+      ForbiddenException,
+    );
+  });
+
+  it('allows Gate 1 and Gate 2 actors and rejects invalid ones', async () => {
+    const service = new AuthorizationPolicyService(
+      {} as never,
+      {
+        findById: async () => product,
+      } as never,
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.SUBMIT,
+        actor: {
+          id: testIds.productOwner,
+          role: UserRole.PRODUCT_MANAGER,
+        },
+        resource: PolicyResource.GATE_WORKFLOW,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.APPROVE,
+        actor: {
+          id: testIds.headOfProduct,
+          role: UserRole.HEAD_OF_PRODUCT,
+        },
+        resource: PolicyResource.GATE_WORKFLOW,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.rejects(
+      service.assertAuthorized({
         action: StageAction.APPROVE,
         actor: {
           id: testIds.commercialOwner,
           role: UserRole.GM_COMMERCIAL_OWNER,
         },
-        resource: PolicyResource.WORKFLOW,
+        resource: PolicyResource.GATE_WORKFLOW,
+        targetId: product.id,
+      }),
+      ForbiddenException,
+    );
+
+    const stageTwoService = new AuthorizationPolicyService(
+      {} as never,
+      {
+        findById: async () =>
+          createProductRecord({
+            currentStage: ProductStage.STAGE_2,
+          }),
+      } as never,
+    );
+
+    await assert.doesNotReject(
+      stageTwoService.assertAuthorized({
+        action: StageAction.APPROVE,
+        actor: {
+          id: testIds.cooApprover,
+          role: UserRole.COO_EXECUTIVE_APPROVER,
+        },
+        resource: PolicyResource.GATE_WORKFLOW,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      stageTwoService.assertAuthorized({
+        action: StageAction.KILL,
+        actor: {
+          id: testIds.cooApprover,
+          role: UserRole.COO_EXECUTIVE_APPROVER,
+        },
+        resource: PolicyResource.GATE_WORKFLOW,
+        targetId: product.id,
+      }),
+    );
+  });
+
+  it('allows Gate 2 review roles and rejects invalid ones', async () => {
+    const service = new AuthorizationPolicyService(
+      {} as never,
+      {
+        findById: async () =>
+          createProductRecord({
+            currentStage: ProductStage.STAGE_2,
+          }),
+      } as never,
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.REVIEW,
+        actor: {
+          id: testIds.qaReviewer,
+          role: UserRole.QA_TSD_REVIEWER,
+        },
+        resource: PolicyResource.GATE_TWO_REVIEWS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.CONFIRM,
+        actor: {
+          id: testIds.financeOwner,
+          role: UserRole.FINANCE_MANAGER,
+        },
+        resource: PolicyResource.GATE_TWO_REVIEWS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.APPROVE,
+        actor: {
+          id: testIds.commercialOwner,
+          role: UserRole.GM_COMMERCIAL_OWNER,
+        },
+        resource: PolicyResource.GATE_TWO_REVIEWS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.rejects(
+      service.assertAuthorized({
+        action: StageAction.REVIEW,
+        actor: {
+          id: testIds.productOwner,
+          role: UserRole.PRODUCT_MANAGER,
+        },
+        resource: PolicyResource.GATE_TWO_REVIEWS,
         targetId: product.id,
       }),
       ForbiddenException,

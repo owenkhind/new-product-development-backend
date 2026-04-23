@@ -101,7 +101,7 @@ Stage 1 should be the first real business slice implemented end-to-end.
 ### Gate 1
 
 - [x] Add Gate 1 submission flow
-- [ ] Add Gate 1 approval / rework / kill decision endpoint
+- [x] Add Gate 1 approval / rework / kill decision endpoint
 - [x] Prevent stage progression without required Stage 1 templates
 - [x] Record audit event on Gate 1 decision
 
@@ -111,23 +111,23 @@ Stage 1 should be the first real business slice implemented end-to-end.
 
 ### Template 4 - Supplier Evaluation Matrix
 
-- [ ] Create schema for Supplier Evaluation Matrix
-- [ ] Add create and read endpoints
+- [x] Create schema for Supplier Evaluation Matrix
+- [x] Add create and read endpoints
 - [ ] Support multiple suppliers and weighted scoring
-- [ ] Enforce minimum 2 qualified suppliers before Gate 2 approval
+- [x] Enforce minimum 2 qualified suppliers before Gate 2 approval
 
 ### Template 5 - Business Case
 
-- [ ] Create schema for Business Case
-- [ ] Add create and read endpoints
+- [x] Create schema for Business Case
+- [x] Add create and read endpoints
 - [ ] Support market opportunity, product summary, GP by channel, revenue projections, risks, and recommendation
-- [ ] Support sign-off fields for Product Manager, Finance Manager, GM, and COO
+- [x] Support sign-off behavior through explicit checkpoint actions for Finance, GM, and COO gate approval
 
 ### Gate 2
 
-- [ ] Add Gate 2 submission and approval flow
-- [ ] Block progression if supplier or business case requirements are incomplete
-- [ ] Record approval history and audit logs
+- [x] Add Gate 2 submission and approval flow
+- [x] Block progression if supplier or business case requirements are incomplete
+- [x] Record approval history and audit logs
 
 ---
 

@@ -1,5 +1,5 @@
 import type { ProductStage } from '../../../enums/product-stage.enum';
-import type { WorkflowTransitionAction } from '../../../enums/workflow-transition-action.enum';
+import type { GateDecisionOutcome } from '../../../enums/gate-decision-outcome.enum';
 
 export type GateDecisionRecord = {
   actingAsUserId: string | null;
@@ -9,7 +9,7 @@ export type GateDecisionRecord = {
   gateStage: ProductStage;
   id: string;
   isAdminSupportAction: boolean;
-  outcome: WorkflowTransitionAction;
+  outcome: GateDecisionOutcome;
   overrideReason: string | null;
   productId: string;
 };

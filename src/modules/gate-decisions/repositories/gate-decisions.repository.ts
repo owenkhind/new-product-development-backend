@@ -4,8 +4,8 @@ import type { QueryResultRow } from 'pg';
 import type { DatabaseQueryable } from '../../../database/database-queryable.type';
 import { DatabaseService } from '../../../database/database.service';
 import { qualifyTableName } from '../../../database/database-schema.util';
+import type { GateDecisionOutcome } from '../../../enums/gate-decision-outcome.enum';
 import type { ProductStage } from '../../../enums/product-stage.enum';
-import type { WorkflowTransitionAction } from '../../../enums/workflow-transition-action.enum';
 import type { GateDecisionRecord } from '../types/gate-decision-record.type';
 
 type GateDecisionRow = QueryResultRow & {
@@ -16,7 +16,7 @@ type GateDecisionRow = QueryResultRow & {
   gate_stage: ProductStage;
   id: string;
   is_admin_support_action: boolean;
-  outcome: WorkflowTransitionAction;
+  outcome: GateDecisionOutcome;
   override_reason: string | null;
   product_id: string;
 };
@@ -28,7 +28,7 @@ type CreateGateDecisionInput = {
   gateStage: ProductStage;
   id: string;
   isAdminSupportAction: boolean;
-  outcome: WorkflowTransitionAction;
+  outcome: GateDecisionOutcome;
   overrideReason: string | null;
   productId: string;
 };

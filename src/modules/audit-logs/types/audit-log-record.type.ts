@@ -1,9 +1,9 @@
 import type { AuditEntityType } from '../../../enums/audit-entity-type.enum';
-import type { WorkflowTransitionAction } from '../../../enums/workflow-transition-action.enum';
+import type { AuditAction } from '../../../enums/audit-action.enum';
 
 export type AuditLogRecord = {
   actingAsUserId: string | null;
-  action: WorkflowTransitionAction;
+  action: AuditAction;
   actorUserId: string;
   createdAt: Date;
   entityId: string;

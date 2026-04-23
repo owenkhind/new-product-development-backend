@@ -5,14 +5,18 @@ import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 
 import { PoliciesGuard } from '../../src/guards/policies.guard';
-import { WorkflowTransitionRequestDto } from '../../src/modules/workflow/dto/workflow-transition-request.dto';
+import { AuthorizationPolicyService } from '../../src/modules/authorization/services/authorization-policy.service';
+import { GateWorkflowController } from '../../src/modules/workflow/controllers/gate-workflow.controller';
 import { ProductWorkflowController } from '../../src/modules/workflow/controllers/product-workflow.controller';
+import { GateTwoReviewsService } from '../../src/modules/workflow/services/gate-two-reviews.service';
+import { GateWorkflowService } from '../../src/modules/workflow/services/gate-workflow.service';
 import { ProductWorkflowService } from '../../src/modules/workflow/services/product-workflow.service';
 import { UsersRepository } from '../../src/modules/users/repositories/users.repository';
-import { AuthorizationPolicyService } from '../../src/modules/authorization/services/authorization-policy.service';
+import { WorkflowTransitionRequestDto } from '../../src/modules/workflow/dto/workflow-transition-request.dto';
 import {
   createAuditLogRecord,
   createGateDecisionRecord,
+  createGateTwoReviewRecord,
   createProductRecord,
   createUserRecord,
   testIds,
@@ -25,7 +29,8 @@ import {
 
 describe('Workflow module wiring (e2e)', () => {
   let app: Awaited<ReturnType<typeof createHttpTestApp>>['app'];
-  let controller: ProductWorkflowController;
+  let productWorkflowController: ProductWorkflowController;
+  let gateWorkflowController: GateWorkflowController;
   let guard: PoliciesGuard;
 
   const productManager = createUserRecord({
@@ -33,21 +38,40 @@ describe('Workflow module wiring (e2e)', () => {
   });
   const workflowResult = {
     auditLog: createAuditLogRecord(),
+    product: createProductRecord(),
+  };
+  const gateWorkflowResult = {
+    auditLog: createAuditLogRecord(),
     gateDecision: createGateDecisionRecord(),
     product: createProductRecord(),
   };
-  const workflowService = {
-    transition: async () => workflowResult,
+  const gateTwoReviewResult = {
+    auditLog: createAuditLogRecord(),
+    review: createGateTwoReviewRecord(),
   };
 
   before(async () => {
     const setup = await createHttpTestApp({
-      controllers: [ProductWorkflowController],
+      controllers: [ProductWorkflowController, GateWorkflowController],
       providers: [
         PoliciesGuard,
         {
           provide: ProductWorkflowService,
-          useValue: workflowService,
+          useValue: {
+            transition: async () => workflowResult,
+          },
+        },
+        {
+          provide: GateWorkflowService,
+          useValue: {
+            transition: async () => gateWorkflowResult,
+          },
+        },
+        {
+          provide: GateTwoReviewsService,
+          useValue: {
+            recordReview: async () => gateTwoReviewResult,
+          },
         },
         {
           provide: UsersRepository,
@@ -71,7 +95,17 @@ describe('Workflow module wiring (e2e)', () => {
     });
 
     app = setup.app;
-    controller = new ProductWorkflowController(workflowService as never);
+    productWorkflowController = new ProductWorkflowController({
+      transition: async () => workflowResult,
+    } as never);
+    gateWorkflowController = new GateWorkflowController(
+      {
+        transition: async () => gateWorkflowResult,
+      } as never,
+      {
+        recordReview: async () => gateTwoReviewResult,
+      } as never,
+    );
     guard = new PoliciesGuard(
       new Reflector(),
       {
@@ -94,12 +128,12 @@ describe('Workflow module wiring (e2e)', () => {
     await assert.rejects(
       guard.canActivate(
         createExecutionContext({
-          controllerClass: controller,
-          handlerName: 'submit',
+          controllerClass: gateWorkflowController,
+          handlerName: 'submitGateOne',
           request: {
             headers: {},
             params: {
-              id: testIds.product,
+              productId: testIds.product,
             },
           },
         }),
@@ -124,28 +158,28 @@ describe('Workflow module wiring (e2e)', () => {
     );
   });
 
-  it('executes submit and approve transitions through the wired module', async () => {
+  it('executes generic workflow and gate workflow transitions through the wired module', async () => {
     await assert.doesNotReject(
       guard.canActivate(
         createExecutionContext({
-          controllerClass: controller,
-          handlerName: 'submit',
+          controllerClass: gateWorkflowController,
+          handlerName: 'submitGateOne',
           request: {
             headers: {
               'x-dev-user-id': testIds.productOwner,
             },
             params: {
-              id: testIds.product,
+              productId: testIds.product,
             },
           },
         }),
       ),
     );
 
-    const submitResponse = await controller.submit(
+    const reopenResponse = await productWorkflowController.reopen(
       testIds.product,
       {
-        comment: 'Ready for Gate 1',
+        comment: 'Reopen',
       },
       {
         user: {
@@ -155,18 +189,32 @@ describe('Workflow module wiring (e2e)', () => {
       } as never,
     );
 
-    const approveResponse = await controller.approve(
+    const approveResponse = await gateWorkflowController.approveGateOne(
       testIds.product,
       {},
       {
         user: {
-          id: testIds.productOwner,
+          id: testIds.headOfProduct,
           role: productManager.role,
         },
       } as never,
     );
 
-    assert.equal(submitResponse.gateDecision.id, workflowResult.gateDecision.id);
-    assert.equal(approveResponse.auditLog.id, workflowResult.auditLog.id);
+    const financeResponse = await gateWorkflowController.confirmGateTwoFinance(
+      testIds.product,
+      {
+        comment: 'Finance confirmed',
+      },
+      {
+        user: {
+          id: testIds.financeOwner,
+          role: productManager.role,
+        },
+      } as never,
+    );
+
+    assert.equal(reopenResponse.auditLog.id, workflowResult.auditLog.id);
+    assert.equal(approveResponse.gateDecision.id, gateWorkflowResult.gateDecision.id);
+    assert.equal(financeResponse.review.productId, gateTwoReviewResult.review.productId);
   });
 });

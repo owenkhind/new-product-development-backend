@@ -3,6 +3,7 @@ export enum ProductStatus {
   IN_REVIEW = 'IN_REVIEW',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
+  KILLED = 'KILLED',
   BLOCKED = 'BLOCKED',
   ARCHIVED = 'ARCHIVED',
 }
