@@ -13,14 +13,20 @@ import { WorkflowTransitionAction } from '../../src/enums/workflow-transition-ac
 import { GateWorkflowController } from '../../src/modules/workflow/controllers/gate-workflow.controller';
 import { ProductWorkflowController } from '../../src/modules/workflow/controllers/product-workflow.controller';
 import { GateTwoReviewsService } from '../../src/modules/workflow/services/gate-two-reviews.service';
+import { GateThreeReviewsService } from '../../src/modules/workflow/services/gate-three-reviews.service';
 import { GateWorkflowService } from '../../src/modules/workflow/services/gate-workflow.service';
 import { ProductWorkflowService } from '../../src/modules/workflow/services/product-workflow.service';
+import { StageThreeCompletionService } from '../../src/modules/workflow/services/stage-three-completion.service';
 import { StageTwoCompletionService } from '../../src/modules/workflow/services/stage-two-completion.service';
 import {
   createAuditLogRecord,
   createBusinessCaseRecord,
+  createChannelListingPlanRecord,
+  createChannelPricingRecord,
   createGateDecisionRecord,
+  createGateThreeReviewRecord,
   createGateTwoReviewRecord,
+  createGtmPlanRecord,
   createProductRecord,
   createSupplierEvaluationRecord,
   testIds,
@@ -252,6 +258,14 @@ describe('GateWorkflowController', () => {
       {
         recordReview: async () => reviewResult,
       } as never,
+      {
+        recordReview: async () => ({
+          auditLog: createAuditLogRecord({
+            action: AuditAction.MARKETING_REVIEW_COMPLETED,
+          }),
+          review: createGateThreeReviewRecord(),
+        }),
+      } as never,
     );
 
     const approveResponse = await controller.approveGateOne(
@@ -301,6 +315,8 @@ describe('GateWorkflowService', () => {
     productUpdate?: (input: { currentStage: ProductStage; status: ProductStatus }) => Promise<unknown>;
     query?: (text: string) => Promise<{ rows: never[] }>;
     stageOneAssert?: (productId: string) => Promise<void>;
+    stageThreeApproveAssert?: (productId: string) => Promise<void>;
+    stageThreeSubmitAssert?: (productId: string) => Promise<void>;
     stageTwoApproveAssert?: (productId: string) => Promise<void>;
     stageTwoSubmitAssert?: (productId: string) => Promise<void>;
   }): GateWorkflowService {
@@ -353,6 +369,10 @@ describe('GateWorkflowService', () => {
       {
         assertReadyForGateTwoApproval: options?.stageTwoApproveAssert ?? (async () => undefined),
         assertReadyForGateTwoSubmission: options?.stageTwoSubmitAssert ?? (async () => undefined),
+      } as never,
+      {
+        assertReadyForGateThreeApproval: options?.stageThreeApproveAssert ?? (async () => undefined),
+        assertReadyForGateThreeSubmission: options?.stageThreeSubmitAssert ?? (async () => undefined),
       } as never,
     );
   }
@@ -504,11 +524,58 @@ describe('GateWorkflowService', () => {
     assert.equal(killResult.product.status, ProductStatus.KILLED);
   });
 
+  it('handles Gate 3 submit, approve, reject, and kill', async () => {
+    const submitResult = await createService({
+      product: createProductRecord({
+        currentStage: ProductStage.STAGE_3,
+        status: ProductStatus.DRAFT,
+      }),
+    }).transition(testIds.product, 'SUBMIT', {
+      id: testIds.productOwner,
+      role: UserRole.PRODUCT_MANAGER,
+    }, {});
+    assert.equal(submitResult.product.status, ProductStatus.IN_REVIEW);
+
+    const approveResult = await createService({
+      product: createProductRecord({
+        currentStage: ProductStage.STAGE_3,
+        status: ProductStatus.IN_REVIEW,
+      }),
+    }).transition(testIds.product, 'APPROVE', {
+      id: testIds.cooApprover,
+      role: UserRole.COO_EXECUTIVE_APPROVER,
+    }, {});
+    assert.equal(approveResult.product.currentStage, ProductStage.STAGE_4);
+    assert.equal(approveResult.product.status, ProductStatus.DRAFT);
+
+    const rejectResult = await createService({
+      product: createProductRecord({
+        currentStage: ProductStage.STAGE_3,
+        status: ProductStatus.IN_REVIEW,
+      }),
+    }).transition(testIds.product, 'REJECT', {
+      id: testIds.commercialOwner,
+      role: UserRole.GM_COMMERCIAL_OWNER,
+    }, {});
+    assert.equal(rejectResult.product.status, ProductStatus.REJECTED);
+
+    const killResult = await createService({
+      product: createProductRecord({
+        currentStage: ProductStage.STAGE_3,
+        status: ProductStatus.IN_REVIEW,
+      }),
+    }).transition(testIds.product, 'KILL', {
+      id: testIds.cooApprover,
+      role: UserRole.COO_EXECUTIVE_APPROVER,
+    }, {});
+    assert.equal(killResult.product.status, ProductStatus.KILLED);
+  });
+
   it('rejects unsupported stages and invalid statuses', async () => {
     await assert.rejects(
       createService({
         product: createProductRecord({
-          currentStage: ProductStage.STAGE_4,
+          currentStage: ProductStage.STAGE_5,
           status: ProductStatus.IN_REVIEW,
         }),
       }).transition(testIds.product, 'APPROVE', {
@@ -527,6 +594,121 @@ describe('GateWorkflowService', () => {
       }).transition(testIds.product, 'APPROVE', {
         id: testIds.headOfProduct,
         role: UserRole.HEAD_OF_PRODUCT,
+      }, {}),
+      BadRequestException,
+    );
+  });
+});
+
+describe('GateThreeReviewsService', () => {
+  function createService(options?: {
+    auditCreate?: (input: { action: AuditAction }) => Promise<unknown>;
+    existingReview?: ReturnType<typeof createGateThreeReviewRecord> | null;
+    product?: ReturnType<typeof createProductRecord> | null;
+    query?: (text: string) => Promise<{ rows: never[] }>;
+    reviewUpsert?: () => Promise<unknown>;
+  }): GateThreeReviewsService {
+    const product = options?.product === undefined ? createProductRecord({
+      currentStage: ProductStage.STAGE_3,
+    }) : options.product;
+
+    return new GateThreeReviewsService(
+      {
+        getClient: async () => ({
+          query: options?.query ?? (async () => ({ rows: [] })),
+          release: () => undefined,
+        }),
+      } as never,
+      {
+        findById: async () => product,
+      } as never,
+      {
+        findByProductId: async () => options?.existingReview ?? null,
+        upsert: options?.reviewUpsert ?? (async (input: { productId: string }) =>
+          createGateThreeReviewRecord({
+            productId: input.productId,
+          })),
+      } as never,
+      {
+        create:
+          options?.auditCreate ??
+          (async (input: { action: AuditAction }) =>
+            createAuditLogRecord({
+              action: input.action,
+            })),
+      } as never,
+    );
+  }
+
+  it('records Finance, Marketing, and GM checkpoints with audit logs', async () => {
+    const financeResult = await createService().recordReview(
+      testIds.product,
+      'FINANCE',
+      {
+        id: testIds.financeOwner,
+        role: UserRole.FINANCE_MANAGER,
+      },
+      {
+        comment: 'Finance done',
+      },
+    );
+    assert.equal(financeResult.auditLog.action, AuditAction.FINANCE_CONFIRMED);
+
+    const marketingResult = await createService().recordReview(
+      testIds.product,
+      'MARKETING',
+      {
+        id: testIds.marketingOwner,
+        role: UserRole.MARKETING_GTM_OWNER,
+      },
+      {
+        comment: 'Marketing done',
+      },
+    );
+    assert.equal(marketingResult.auditLog.action, AuditAction.MARKETING_REVIEW_COMPLETED);
+
+    const gmResult = await createService().recordReview(
+      testIds.product,
+      'GM',
+      {
+        id: testIds.commercialOwner,
+        role: UserRole.GM_COMMERCIAL_OWNER,
+      },
+      {
+        comment: 'GM done',
+      },
+    );
+    assert.equal(gmResult.auditLog.action, AuditAction.GM_APPROVED);
+  });
+
+  it('rejects invalid stage, missing product, and missing admin override reason', async () => {
+    await assert.rejects(
+      createService({
+        product: createProductRecord({
+          currentStage: ProductStage.STAGE_2,
+        }),
+      }).recordReview(testIds.product, 'FINANCE', {
+        id: testIds.financeOwner,
+        role: UserRole.FINANCE_MANAGER,
+      }, {}),
+      BadRequestException,
+    );
+
+    await assert.rejects(
+      createService({
+        product: null,
+      }).recordReview(testIds.product, 'FINANCE', {
+        id: testIds.financeOwner,
+        role: UserRole.FINANCE_MANAGER,
+      }, {}),
+      NotFoundException,
+    );
+
+    await assert.rejects(
+      createService().recordReview(testIds.product, 'FINANCE', {
+        id: testIds.admin,
+        isAdminSupportOverride: true,
+        role: UserRole.ADMIN,
       }, {}),
       BadRequestException,
     );
@@ -705,6 +887,92 @@ describe('StageTwoCompletionService', () => {
           suppliers: [createSupplierEvaluationRecord().suppliers[0]!],
         }),
       }).assertReadyForGateTwoApproval(testIds.product),
+      BadRequestException,
+    );
+  });
+});
+
+describe('StageThreeCompletionService', () => {
+  function createService(options?: {
+    channelListingPlan?: ReturnType<typeof createChannelListingPlanRecord> | null;
+    channelPricing?: ReturnType<typeof createChannelPricingRecord> | null;
+    gateThreeReview?: ReturnType<typeof createGateThreeReviewRecord> | null;
+    gtmPlan?: ReturnType<typeof createGtmPlanRecord> | null;
+  }): StageThreeCompletionService {
+    return new StageThreeCompletionService(
+      {
+        findByProductId: async () =>
+          options?.channelListingPlan === undefined
+            ? createChannelListingPlanRecord()
+            : options.channelListingPlan,
+      } as never,
+      {
+        findByProductId: async () =>
+          options?.channelPricing === undefined
+            ? createChannelPricingRecord()
+            : options.channelPricing,
+      } as never,
+      {
+        findByProductId: async () =>
+          options?.gtmPlan === undefined ? createGtmPlanRecord() : options.gtmPlan,
+      } as never,
+      {
+        findByProductId: async () =>
+          options?.gateThreeReview === undefined
+            ? createGateThreeReviewRecord()
+            : options.gateThreeReview,
+      } as never,
+    );
+  }
+
+  it('accepts complete Stage 3 submission and approval data', async () => {
+    const service = createService();
+    await assert.doesNotReject(service.assertReadyForGateThreeSubmission(testIds.product));
+    await assert.doesNotReject(service.assertReadyForGateThreeApproval(testIds.product));
+  });
+
+  it('rejects missing Stage 3 prerequisites', async () => {
+    await assert.rejects(
+      createService({
+        channelListingPlan: null,
+        channelPricing: null,
+        gtmPlan: null,
+      }).assertReadyForGateThreeSubmission(testIds.product),
+      BadRequestException,
+    );
+
+    await assert.rejects(
+      createService({
+        channelListingPlan: createChannelListingPlanRecord({
+          channels: [createChannelListingPlanRecord().channels[0]!],
+          lazadaConfirmed: false,
+          shopeeConfirmed: false,
+        }),
+        channelPricing: createChannelPricingRecord({
+          pricingRows: [
+            {
+              ...createChannelPricingRecord().pricingRows[0]!,
+              calculatedGpPercent: '10.00',
+            },
+          ],
+        }),
+        gateThreeReview: createGateThreeReviewRecord({
+          financeConfirmedAt: null,
+          financeConfirmedByUserId: null,
+          gmApprovedAt: null,
+          gmApprovedByUserId: null,
+          marketingReviewedAt: null,
+          marketingReviewedByUserId: null,
+        }),
+        gtmPlan: createGtmPlanRecord({
+          checklistItems: [
+            {
+              ...createGtmPlanRecord().checklistItems[0]!,
+              isComplete: false,
+            },
+          ],
+        }),
+      }).assertReadyForGateThreeApproval(testIds.product),
       BadRequestException,
     );
   });

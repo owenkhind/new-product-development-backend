@@ -133,8 +133,8 @@ describe('AuthorizationPolicyService', () => {
       service.assertAuthorized({
         action: StageAction.REOPEN,
         actor: {
-          id: testIds.headOfProduct,
-          role: UserRole.HEAD_OF_PRODUCT,
+          id: testIds.commercialOwner,
+          role: UserRole.GM_COMMERCIAL_OWNER,
         },
         resource: PolicyResource.WORKFLOW,
         targetId: product.id,
@@ -155,7 +155,7 @@ describe('AuthorizationPolicyService', () => {
     );
   });
 
-  it('allows Gate 1 and Gate 2 actors and rejects invalid ones', async () => {
+  it('allows Gate 1, Gate 2, and Gate 3 actors and rejects invalid ones', async () => {
     const service = new AuthorizationPolicyService(
       {} as never,
       {
@@ -233,6 +233,40 @@ describe('AuthorizationPolicyService', () => {
         targetId: product.id,
       }),
     );
+
+    const stageThreeService = new AuthorizationPolicyService(
+      {} as never,
+      {
+        findById: async () =>
+          createProductRecord({
+            currentStage: ProductStage.STAGE_3,
+          }),
+      } as never,
+    );
+
+    await assert.doesNotReject(
+      stageThreeService.assertAuthorized({
+        action: StageAction.APPROVE,
+        actor: {
+          id: testIds.cooApprover,
+          role: UserRole.COO_EXECUTIVE_APPROVER,
+        },
+        resource: PolicyResource.GATE_WORKFLOW,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      stageThreeService.assertAuthorized({
+        action: StageAction.REJECT,
+        actor: {
+          id: testIds.commercialOwner,
+          role: UserRole.GM_COMMERCIAL_OWNER,
+        },
+        resource: PolicyResource.GATE_WORKFLOW,
+        targetId: product.id,
+      }),
+    );
   });
 
   it('allows Gate 2 review roles and rejects invalid ones', async () => {
@@ -290,6 +324,67 @@ describe('AuthorizationPolicyService', () => {
           role: UserRole.PRODUCT_MANAGER,
         },
         resource: PolicyResource.GATE_TWO_REVIEWS,
+        targetId: product.id,
+      }),
+      ForbiddenException,
+    );
+  });
+
+  it('allows assigned Gate 3 review roles and rejects invalid ones', async () => {
+    const service = new AuthorizationPolicyService(
+      {} as never,
+      {
+        findById: async () =>
+          createProductRecord({
+            currentStage: ProductStage.STAGE_3,
+          }),
+      } as never,
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.CONFIRM,
+        actor: {
+          id: testIds.financeOwner,
+          role: UserRole.FINANCE_MANAGER,
+        },
+        resource: PolicyResource.GATE_THREE_REVIEWS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.REVIEW,
+        actor: {
+          id: testIds.marketingOwner,
+          role: UserRole.MARKETING_GTM_OWNER,
+        },
+        resource: PolicyResource.GATE_THREE_REVIEWS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.APPROVE,
+        actor: {
+          id: testIds.commercialOwner,
+          role: UserRole.GM_COMMERCIAL_OWNER,
+        },
+        resource: PolicyResource.GATE_THREE_REVIEWS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.rejects(
+      service.assertAuthorized({
+        action: StageAction.REVIEW,
+        actor: {
+          id: testIds.productOwner,
+          role: UserRole.PRODUCT_MANAGER,
+        },
+        resource: PolicyResource.GATE_THREE_REVIEWS,
         targetId: product.id,
       }),
       ForbiddenException,

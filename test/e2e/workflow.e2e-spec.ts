@@ -8,6 +8,7 @@ import { PoliciesGuard } from '../../src/guards/policies.guard';
 import { AuthorizationPolicyService } from '../../src/modules/authorization/services/authorization-policy.service';
 import { GateWorkflowController } from '../../src/modules/workflow/controllers/gate-workflow.controller';
 import { ProductWorkflowController } from '../../src/modules/workflow/controllers/product-workflow.controller';
+import { GateThreeReviewsService } from '../../src/modules/workflow/services/gate-three-reviews.service';
 import { GateTwoReviewsService } from '../../src/modules/workflow/services/gate-two-reviews.service';
 import { GateWorkflowService } from '../../src/modules/workflow/services/gate-workflow.service';
 import { ProductWorkflowService } from '../../src/modules/workflow/services/product-workflow.service';
@@ -16,6 +17,7 @@ import { WorkflowTransitionRequestDto } from '../../src/modules/workflow/dto/wor
 import {
   createAuditLogRecord,
   createGateDecisionRecord,
+  createGateThreeReviewRecord,
   createGateTwoReviewRecord,
   createProductRecord,
   createUserRecord,
@@ -49,6 +51,10 @@ describe('Workflow module wiring (e2e)', () => {
     auditLog: createAuditLogRecord(),
     review: createGateTwoReviewRecord(),
   };
+  const gateThreeReviewResult = {
+    auditLog: createAuditLogRecord(),
+    review: createGateThreeReviewRecord(),
+  };
 
   before(async () => {
     const setup = await createHttpTestApp({
@@ -71,6 +77,12 @@ describe('Workflow module wiring (e2e)', () => {
           provide: GateTwoReviewsService,
           useValue: {
             recordReview: async () => gateTwoReviewResult,
+          },
+        },
+        {
+          provide: GateThreeReviewsService,
+          useValue: {
+            recordReview: async () => gateThreeReviewResult,
           },
         },
         {
@@ -104,6 +116,9 @@ describe('Workflow module wiring (e2e)', () => {
       } as never,
       {
         recordReview: async () => gateTwoReviewResult,
+      } as never,
+      {
+        recordReview: async () => gateThreeReviewResult,
       } as never,
     );
     guard = new PoliciesGuard(
@@ -212,9 +227,22 @@ describe('Workflow module wiring (e2e)', () => {
         },
       } as never,
     );
+    const marketingResponse = await gateWorkflowController.reviewGateThreeMarketing(
+      testIds.product,
+      {
+        comment: 'Marketing reviewed',
+      },
+      {
+        user: {
+          id: testIds.marketingOwner,
+          role: productManager.role,
+        },
+      } as never,
+    );
 
     assert.equal(reopenResponse.auditLog.id, workflowResult.auditLog.id);
     assert.equal(approveResponse.gateDecision.id, gateWorkflowResult.gateDecision.id);
     assert.equal(financeResponse.review.productId, gateTwoReviewResult.review.productId);
+    assert.equal(marketingResponse.review.productId, gateThreeReviewResult.review.productId);
   });
 });

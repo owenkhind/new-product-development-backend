@@ -6,8 +6,10 @@ import { StageAction } from '../../../enums/stage-action.enum';
 import { Authorize } from '../../../guards/authorize.decorator';
 import { PoliciesGuard } from '../../../guards/policies.guard';
 import { WorkflowTransitionRequestDto } from '../dto/workflow-transition-request.dto';
+import { GateThreeReviewResponseDto } from '../dto/gate-three-review-response.dto';
 import { GateTwoReviewResponseDto } from '../dto/gate-two-review-response.dto';
 import { GateWorkflowResponseDto } from '../dto/gate-workflow-response.dto';
+import { GateThreeReviewsService } from '../services/gate-three-reviews.service';
 import { GateTwoReviewsService } from '../services/gate-two-reviews.service';
 import { GateWorkflowService } from '../services/gate-workflow.service';
 
@@ -17,6 +19,7 @@ export class GateWorkflowController {
   constructor(
     private readonly gateWorkflowService: GateWorkflowService,
     private readonly gateTwoReviewsService: GateTwoReviewsService,
+    private readonly gateThreeReviewsService: GateThreeReviewsService,
   ) {}
 
   @Post('gate-1/submit')
@@ -107,6 +110,50 @@ export class GateWorkflowController {
     return GateWorkflowResponseDto.fromRecords(result);
   }
 
+  @Post('gate-3/submit')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.SUBMIT)
+  async submitGateThree(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(productId, 'SUBMIT', request.user!, input);
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-3/approve')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.APPROVE)
+  async approveGateThree(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(productId, 'APPROVE', request.user!, input);
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-3/reject')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.REJECT)
+  async rejectGateThree(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(productId, 'REJECT', request.user!, input);
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-3/kill')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.KILL)
+  async killGateThree(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(productId, 'KILL', request.user!, input);
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
   @Post('gate-2/reviews/qa')
   @Authorize(PolicyResource.GATE_TWO_REVIEWS, StageAction.REVIEW)
   async reviewGateTwoQa(
@@ -143,5 +190,48 @@ export class GateWorkflowController {
   ): Promise<GateTwoReviewResponseDto> {
     const result = await this.gateTwoReviewsService.recordReview(productId, 'GM', request.user!, input);
     return GateTwoReviewResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-3/reviews/finance')
+  @Authorize(PolicyResource.GATE_THREE_REVIEWS, StageAction.CONFIRM)
+  async confirmGateThreeFinance(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateThreeReviewResponseDto> {
+    const result = await this.gateThreeReviewsService.recordReview(
+      productId,
+      'FINANCE',
+      request.user!,
+      input,
+    );
+    return GateThreeReviewResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-3/reviews/marketing')
+  @Authorize(PolicyResource.GATE_THREE_REVIEWS, StageAction.REVIEW)
+  async reviewGateThreeMarketing(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateThreeReviewResponseDto> {
+    const result = await this.gateThreeReviewsService.recordReview(
+      productId,
+      'MARKETING',
+      request.user!,
+      input,
+    );
+    return GateThreeReviewResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-3/reviews/gm')
+  @Authorize(PolicyResource.GATE_THREE_REVIEWS, StageAction.APPROVE)
+  async approveGateThreeGm(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateThreeReviewResponseDto> {
+    const result = await this.gateThreeReviewsService.recordReview(productId, 'GM', request.user!, input);
+    return GateThreeReviewResponseDto.fromRecords(result);
   }
 }

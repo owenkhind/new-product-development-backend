@@ -40,6 +40,9 @@ export class AuthorizationPolicyService {
       case PolicyResource.GATE_WORKFLOW:
         await this.assertGateWorkflowAccess(input);
         return;
+      case PolicyResource.GATE_THREE_REVIEWS:
+        await this.assertGateThreeReviewAccess(input);
+        return;
       case PolicyResource.GATE_TWO_REVIEWS:
         await this.assertGateTwoReviewAccess(input);
         return;
@@ -189,6 +192,36 @@ export class AuthorizationPolicyService {
         }
 
         break;
+      case 'STAGE_3':
+        if (
+          input.action === StageAction.SUBMIT &&
+          product.productOwnerUserId === input.actor.id
+        ) {
+          return;
+        }
+
+        if (
+          input.action === StageAction.APPROVE &&
+          input.actor.role === UserRole.COO_EXECUTIVE_APPROVER
+        ) {
+          return;
+        }
+
+        if (
+          input.action === StageAction.REJECT &&
+          [UserRole.GM_COMMERCIAL_OWNER, UserRole.COO_EXECUTIVE_APPROVER].includes(input.actor.role)
+        ) {
+          return;
+        }
+
+        if (
+          input.action === StageAction.KILL &&
+          input.actor.role === UserRole.COO_EXECUTIVE_APPROVER
+        ) {
+          return;
+        }
+
+        break;
       default:
         break;
     }
@@ -233,6 +266,46 @@ export class AuthorizationPolicyService {
     throw new ForbiddenException({
       code: 'GATE_TWO_REVIEW_ACTION_FORBIDDEN',
       message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} Gate 2 reviews.`,
+    });
+  }
+
+  private async assertGateThreeReviewAccess(input: AuthorizationInput): Promise<void> {
+    const product = await this.getProductOrThrow(input.targetId);
+
+    if (product.currentStage !== 'STAGE_3') {
+      throw new ForbiddenException({
+        code: 'GATE_THREE_REVIEW_STAGE_INVALID',
+        message: 'Gate 3 reviews can only be updated while the product is in Stage 3.',
+      });
+    }
+
+    if (
+      input.action === StageAction.CONFIRM &&
+      input.actor.role === UserRole.FINANCE_MANAGER &&
+      product.financeOwnerUserId === input.actor.id
+    ) {
+      return;
+    }
+
+    if (
+      input.action === StageAction.REVIEW &&
+      input.actor.role === UserRole.MARKETING_GTM_OWNER &&
+      product.marketingOwnerUserId === input.actor.id
+    ) {
+      return;
+    }
+
+    if (
+      input.action === StageAction.APPROVE &&
+      input.actor.role === UserRole.GM_COMMERCIAL_OWNER &&
+      product.commercialOwnerUserId === input.actor.id
+    ) {
+      return;
+    }
+
+    throw new ForbiddenException({
+      code: 'GATE_THREE_REVIEW_ACTION_FORBIDDEN',
+      message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} Gate 3 reviews.`,
     });
   }
 
@@ -309,8 +382,8 @@ export class AuthorizationPolicyService {
     switch (product.currentStage) {
       case 'STAGE_3':
         return (
-          actor.role === UserRole.HEAD_OF_PRODUCT ||
-          actor.role === UserRole.GM_COMMERCIAL_OWNER
+          actor.role === UserRole.GM_COMMERCIAL_OWNER ||
+          actor.role === UserRole.COO_EXECUTIVE_APPROVER
         );
       case 'STAGE_4':
         return (

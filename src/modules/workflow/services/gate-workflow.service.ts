@@ -15,6 +15,7 @@ import type { GateDecisionRecord } from '../../gate-decisions/types/gate-decisio
 import { ProductsRepository } from '../../products/repositories/products.repository';
 import type { ProductRecord } from '../../products/types/product-record.type';
 import { StageOneCompletionService } from './stage-one-completion.service';
+import { StageThreeCompletionService } from './stage-three-completion.service';
 import { StageTwoCompletionService } from './stage-two-completion.service';
 
 type GateWorkflowResult = {
@@ -34,6 +35,7 @@ export class GateWorkflowService {
     private readonly auditLogsRepository: AuditLogsRepository,
     private readonly stageOneCompletionService: StageOneCompletionService,
     private readonly stageTwoCompletionService: StageTwoCompletionService,
+    private readonly stageThreeCompletionService: StageThreeCompletionService,
   ) {}
 
   async transition(
@@ -158,6 +160,18 @@ export class GateWorkflowService {
       return;
     }
 
+    if (product.currentStage === ProductStage.STAGE_3) {
+      if (action === 'SUBMIT') {
+        await this.stageThreeCompletionService.assertReadyForGateThreeSubmission(product.id);
+      }
+
+      if (action === 'APPROVE') {
+        await this.stageThreeCompletionService.assertReadyForGateThreeApproval(product.id);
+      }
+
+      return;
+    }
+
     throw new BadRequestException({
       code: 'UNSUPPORTED_GATE_STAGE',
       message: `Explicit gate decisions are not supported for ${product.currentStage}.`,
@@ -252,6 +266,8 @@ export class GateWorkflowService {
         return ProductStage.STAGE_2;
       case ProductStage.STAGE_2:
         return ProductStage.STAGE_3;
+      case ProductStage.STAGE_3:
+        return ProductStage.STAGE_4;
       default:
         return stage;
     }

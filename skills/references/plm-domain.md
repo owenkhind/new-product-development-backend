@@ -15,13 +15,12 @@ The product lifecycle runs through a stage-gate process with 17 templates:
   - T5 Business Case
   - output: Gate 2 decision
 - Stage 3
-  - no template is defined in the provided PDF
-  - treat Stage 3 as a potential future workflow step; do not invent a template unless the user or business owner asks for it
-- Stage 4
   - T6 Channel Listing Plan
   - T7 RSP by Channel
   - T8 GTM Plan
-  - output: Gate 4 decision
+  - output: Gate 3 decision
+- Stage 4
+  - reserved for the next post-readiness stage after Gate 3 approval
 - Stage 5
   - T9 Launch Confirmation & Live Listing
   - T10 Sell-In Report
@@ -122,7 +121,7 @@ Implement these in services and protect them with tests.
 
 ### Template-specific rules
 - T4 Supplier Evaluation requires at least 2 qualified suppliers for Gate 2.
-- T6 Channel Listing Plan requires at least 3 confirmed channels for Gate 4.
+- T6 Channel Listing Plan requires at least 3 confirmed channels for Gate 3.
 - T6 also expects Shopee and Lazada to be confirmed for e-commerce readiness.
 - T13 can trigger automatic escalation when the product is C-class for 2 consecutive scorecard cycles.
 
@@ -204,8 +203,8 @@ When the backend is being built from scratch, prefer this order:
    - T1, T2, T3, Gate 1
 3. Stage 2
    - T4, T5, Gate 2
-4. Stage 4
-   - T6, T7, T8, Gate 4
+4. Stage 3
+   - T6, T7, T8, Gate 3
 5. Stage 5
    - T9, T10, T11, T12
 6. Stage 6
@@ -242,7 +241,7 @@ Index likely hot paths:
 ## Ambiguities to surface, not guess
 Raise these when they matter to implementation:
 
-- Stage 3 has no template in the source PDF.
+- The source PDF labels T6/T7/T8 under Stage 4, but this project now treats them as Stage 3 Launch Readiness.
 - Template 1 threshold wording appears inconsistent.
 - Some signature fields may actually represent approval actions rather than passive metadata.
 - It is unclear whether submitted forms remain editable or must become immutable snapshots.

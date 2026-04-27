@@ -1,6 +1,8 @@
 import { AuditAction } from '../../src/enums/audit-action.enum';
 import { AuditEntityType } from '../../src/enums/audit-entity-type.enum';
+import { ChannelType } from '../../src/enums/channel-type.enum';
 import { GateDecisionOutcome } from '../../src/enums/gate-decision-outcome.enum';
+import { GtmOwnerRole } from '../../src/enums/gtm-owner-role.enum';
 import { ProductBrand } from '../../src/enums/product-brand.enum';
 import { ProductCategory } from '../../src/enums/product-category.enum';
 import { ProductStage } from '../../src/enums/product-stage.enum';
@@ -8,7 +10,10 @@ import { ProductStatus } from '../../src/enums/product-status.enum';
 import { UserRole } from '../../src/enums/user-role.enum';
 import type { AuditLogRecord } from '../../src/modules/audit-logs/types/audit-log-record.type';
 import type { BusinessCaseRecord } from '../../src/modules/business-cases/types/business-case-record.type';
+import type { ChannelListingPlanRecord } from '../../src/modules/channel-listing-plans/types/channel-listing-plan-record.type';
+import type { ChannelPricingRecord } from '../../src/modules/channel-pricing/types/channel-pricing-record.type';
 import type { GateDecisionRecord } from '../../src/modules/gate-decisions/types/gate-decision-record.type';
+import type { GtmPlanRecord } from '../../src/modules/gtm-plans/types/gtm-plan-record.type';
 import type { CompetitorMatrixRecord } from '../../src/modules/competitor-matrices/types/competitor-matrix-record.type';
 import type { MarketSizingRecord } from '../../src/modules/market-sizing/types/market-sizing-record.type';
 import type { OpportunityBriefRecord } from '../../src/modules/opportunity-briefs/types/opportunity-brief-record.type';
@@ -16,6 +21,7 @@ import type { ProductRecord } from '../../src/modules/products/types/product-rec
 import type { SupplierEvaluationRecord } from '../../src/modules/supplier-evaluations/types/supplier-evaluation-record.type';
 import type { UserRecord } from '../../src/modules/users/types/user-record.type';
 import type { GateTwoReviewRecord } from '../../src/modules/workflow/types/gate-two-review-record.type';
+import type { GateThreeReviewRecord } from '../../src/modules/workflow/types/gate-three-review-record.type';
 
 export const testIds = {
   actingAsUser: '00000000-0000-4000-8000-000000000012',
@@ -26,6 +32,7 @@ export const testIds = {
   cooApprover: '00000000-0000-4000-8000-000000000019',
   financeOwner: '00000000-0000-4000-8000-000000000004',
   gateDecision: '00000000-0000-4000-8000-000000000009',
+  gateThreeReview: '00000000-0000-4000-8000-000000000033',
   gateTwoReview: '00000000-0000-4000-8000-000000000020',
   headOfProduct: '00000000-0000-4000-8000-000000000002',
   marketingOwner: '00000000-0000-4000-8000-000000000005',
@@ -34,6 +41,146 @@ export const testIds = {
   qaReviewer: '00000000-0000-4000-8000-000000000021',
   sourcingManager: '00000000-0000-4000-8000-000000000022',
 };
+
+export function createChannelListingPlanRecord(
+  overrides: Partial<ChannelListingPlanRecord> = {},
+): ChannelListingPlanRecord {
+  return {
+    channels: [
+      {
+        accountName: 'Shopee Official Store',
+        channelType: ChannelType.MTO,
+        id: '00000000-0000-4000-8000-000000000027',
+        isConfirmed: true,
+        launchOwner: 'Cluster A',
+        readinessNotes: 'Hero listing ready.',
+        targetGoLiveDate: '2026-05-15',
+      },
+      {
+        accountName: 'Lazada Flagship',
+        channelType: ChannelType.ITO_RETAILERS,
+        id: '00000000-0000-4000-8000-000000000028',
+        isConfirmed: true,
+        launchOwner: 'Cluster B',
+        readinessNotes: 'Listing copy approved.',
+        targetGoLiveDate: '2026-05-15',
+      },
+      {
+        accountName: 'Key Dealer Network',
+        channelType: ChannelType.MM,
+        id: '00000000-0000-4000-8000-000000000029',
+        isConfirmed: true,
+        launchOwner: 'Cluster C',
+        readinessNotes: 'Sell-in list confirmed.',
+        targetGoLiveDate: '2026-05-20',
+      },
+    ],
+    createdAt: new Date('2026-04-27T00:00:00.000Z'),
+    id: '00000000-0000-4000-8000-000000000030',
+    lazadaConfirmed: true,
+    productId: testIds.product,
+    shopeeConfirmed: true,
+    summary: 'Launch listing is ready across priority channels.',
+    updatedAt: new Date('2026-04-27T00:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export function createChannelPricingRecord(
+  overrides: Partial<ChannelPricingRecord> = {},
+): ChannelPricingRecord {
+  return {
+    createdAt: new Date('2026-04-27T00:00:00.000Z'),
+    currency: 'MYR',
+    id: '00000000-0000-4000-8000-000000000031',
+    notes: 'Launch pricing meets channel guardrails.',
+    pricingRows: [
+      {
+        calculatedGpPercent: '30.00',
+        channelType: ChannelType.MTO,
+        id: '00000000-0000-4000-8000-000000000034',
+        landedCost: '140.00',
+        notes: 'Direct official store.',
+        rsp: '200.00',
+      },
+      {
+        calculatedGpPercent: '25.00',
+        channelType: ChannelType.ITO_RETAILERS,
+        id: '00000000-0000-4000-8000-000000000035',
+        landedCost: '135.00',
+        notes: 'Retail launch price.',
+        rsp: '180.00',
+      },
+      {
+        calculatedGpPercent: '30.00',
+        channelType: ChannelType.MM,
+        id: '00000000-0000-4000-8000-000000000036',
+        landedCost: '126.00',
+        notes: 'Dealer bundle.',
+        rsp: '180.00',
+      },
+    ],
+    productId: testIds.product,
+    updatedAt: new Date('2026-04-27T00:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export function createGtmPlanRecord(overrides: Partial<GtmPlanRecord> = {}): GtmPlanRecord {
+  return {
+    activationPlan: 'Hero banner, dealer blast, and launch bundle.',
+    budget: '50000.00',
+    campaignEndDate: '2026-06-15',
+    campaignStartDate: '2026-05-15',
+    checklistItems: [
+      {
+        dueDate: '2026-05-01',
+        id: '00000000-0000-4000-8000-000000000037',
+        isComplete: true,
+        isCritical: true,
+        itemName: 'Product photography completed',
+        notes: 'Images approved.',
+        ownerRole: GtmOwnerRole.MARKETING_GTM_OWNER,
+      },
+      {
+        dueDate: '2026-05-05',
+        id: '00000000-0000-4000-8000-000000000038',
+        isComplete: true,
+        isCritical: true,
+        itemName: 'Dealer blast scheduled',
+        notes: 'Blast list loaded.',
+        ownerRole: GtmOwnerRole.CLUSTER_MANAGER,
+      },
+    ],
+    communicationsPlan: 'Dealer, marketplace, and social launch communications.',
+    createdAt: new Date('2026-04-27T00:00:00.000Z'),
+    id: '00000000-0000-4000-8000-000000000032',
+    launchObjectives: 'Reach confirmed launch listings and initial sell-in momentum.',
+    productId: testIds.product,
+    updatedAt: new Date('2026-04-27T00:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export function createGateThreeReviewRecord(
+  overrides: Partial<GateThreeReviewRecord> = {},
+): GateThreeReviewRecord {
+  return {
+    createdAt: new Date('2026-04-27T00:00:00.000Z'),
+    financeComment: 'Pricing confirmed.',
+    financeConfirmedAt: new Date('2026-04-27T01:00:00.000Z'),
+    financeConfirmedByUserId: testIds.financeOwner,
+    gmApprovedAt: new Date('2026-04-27T03:00:00.000Z'),
+    gmApprovedByUserId: testIds.commercialOwner,
+    gmComment: 'Launch readiness accepted.',
+    marketingComment: 'GTM assets ready.',
+    marketingReviewedAt: new Date('2026-04-27T02:00:00.000Z'),
+    marketingReviewedByUserId: testIds.marketingOwner,
+    productId: testIds.product,
+    updatedAt: new Date('2026-04-27T03:00:00.000Z'),
+    ...overrides,
+  };
+}
 
 export function createUserRecord(overrides: Partial<UserRecord> = {}): UserRecord {
   return {

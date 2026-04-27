@@ -131,30 +131,24 @@ Stage 1 should be the first real business slice implemented end-to-end.
 
 ---
 
-## Stage 3 clarification
+## Stage 3 features
 
-- [ ] Confirm what Stage 3 represents in the business process
-- [ ] Confirm whether Stage 3 needs its own template, approval, or backend module
-- [ ] Avoid implementing a fake Stage 3 template before requirements are confirmed
-
----
-
-## Stage 4 features
+Decision: Stage 3 is Launch Readiness. The source PDF previously labelled these templates under Stage 4, but this backend uses `STAGE_3` and `gate-3` consistently.
 
 ### Template 6 - Channel Listing Plan
 
-- [ ] Create schema for Channel Listing Plan
-- [ ] Add create and read endpoints
-- [ ] Support channel/account rows, launch readiness fields, and summary counts
-- [ ] Enforce minimum 3 channels for Gate 4
-- [ ] Enforce Shopee and Lazada readiness requirement if confirmed by business
+- [x] Create schema for Channel Listing Plan
+- [x] Add create and read endpoints
+- [x] Support channel/account rows, launch readiness fields, and summary counts
+- [x] Enforce minimum 3 channels for Gate 3
+- [x] Enforce Shopee and Lazada readiness requirement
 
 ### Template 7 - RSP by Channel
 
-- [ ] Create schema for channel pricing
-- [ ] Add create and read endpoints
-- [ ] Calculate GP by channel
-- [ ] Enforce minimum GP floors:
+- [x] Create schema for channel pricing
+- [x] Add create and read endpoints
+- [x] Calculate GP by channel
+- [x] Enforce minimum GP floors:
   - MTO 25%
   - ITO Retailers 22%
   - ITO Wholesale 20%
@@ -162,19 +156,20 @@ Stage 1 should be the first real business slice implemented end-to-end.
   - Projects 18%
   - CS 30%
   - Export/KME 20%
-- [ ] Enforce pricing guardrails and exception flows
+- [x] Enforce ITO pricing guardrail
+- [ ] Add exception approval flows for below-floor pricing
 
 ### Template 8 - GTM Plan
 
-- [ ] Create schema for GTM Plan
-- [ ] Add create and read endpoints
-- [ ] Support launch objectives, activation plan, communications, budget, and checklist
+- [x] Create schema for GTM Plan
+- [x] Add create and read endpoints
+- [x] Support launch objectives, activation plan, communications, budget, and checklist
 
-### Gate 4
+### Gate 3
 
-- [ ] Add Gate 4 submission and approval flow
-- [ ] Prevent progression if pricing or listing requirements fail
-- [ ] Record approval history and audit logs
+- [x] Add Gate 3 submission and approval flow
+- [x] Prevent progression if pricing, listing, GTM, or checkpoint requirements fail
+- [x] Record approval history and audit logs
 
 ---
 

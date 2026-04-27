@@ -1,0 +1,9 @@
+export enum ChannelType {
+  CS = 'CS',
+  EXPORT_KME = 'EXPORT_KME',
+  ITO_RETAILERS = 'ITO_RETAILERS',
+  ITO_WHOLESALE = 'ITO_WHOLESALE',
+  MM = 'MM',
+  MTO = 'MTO',
+  PROJECTS = 'PROJECTS',
+}

@@ -110,7 +110,7 @@ Default approval authorities:
   - QA/TSD notes compliance readiness
   - Finance confirms P&L / GP
   - GM and COO approve commercial progression
-- Gate 4
+- Gate 3
   - Product, Cluster, Finance, and Marketing prepare readiness
   - GM and COO approve launch readiness
 - Stage 5 escalations
@@ -121,8 +121,8 @@ Default approval authorities:
 ## Stage-specific behavior notes
 - Stage 1 is Product-led with governance approval from Head of Product.
 - Stage 2 splits into supplier, QA, finance, and commercial sub-checks. Prefer separate status flags instead of one flat boolean.
-- Stage 3 is still undefined in the source templates. Treat it as a controlled internal stage until business rules are confirmed.
-- Stage 4 blocks should include channel count, e-commerce readiness, GP floors, and unresolved critical checklist items.
+- Stage 3 is Launch Readiness and includes channel listing, channel pricing, GTM plan, and Gate 3.
+- Stage 3 blocks should include channel count, e-commerce readiness, GP floors, and unresolved critical checklist items.
 - Stage 5 should produce system flags such as `on_track`, `below_target`, `significantly_below`, `gp_issue`, and `halt_po_required`.
 - Stage 6 should support automatic escalation triggers for repeated C-class or repeated GP underperformance.
 
