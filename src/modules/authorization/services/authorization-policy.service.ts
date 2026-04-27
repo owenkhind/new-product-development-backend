@@ -46,6 +46,12 @@ export class AuthorizationPolicyService {
       case PolicyResource.GATE_TWO_REVIEWS:
         await this.assertGateTwoReviewAccess(input);
         return;
+      case PolicyResource.LAUNCH_CONFIRMATIONS:
+      case PolicyResource.SELL_IN_REPORTS:
+      case PolicyResource.WEEKLY_FEEDBACK_LOGS:
+      case PolicyResource.DAY_30_REVIEWS:
+        await this.assertStageFourTemplateAccess(input);
+        return;
       case PolicyResource.GATE_DECISIONS:
       case PolicyResource.AUDIT_LOGS:
         await this.assertProductScopedViewAccess(input);
@@ -322,6 +328,77 @@ export class AuthorizationPolicyService {
     throw this.productActionForbidden(StageAction.VIEW, input.actor.role);
   }
 
+  private async assertStageFourTemplateAccess(input: AuthorizationInput): Promise<void> {
+    const product = await this.getProductOrThrow(input.targetId);
+
+    if (input.action === StageAction.VIEW) {
+      if (
+        this.hasGlobalProductViewAccess(input.actor.role) ||
+        this.isAssignedProductContributor(input.actor, product) ||
+        input.actor.role === UserRole.KD_AFTER_SALES
+      ) {
+        return;
+      }
+
+      throw this.productActionForbidden(input.action, input.actor.role);
+    }
+
+    if (input.action !== StageAction.EDIT) {
+      throw this.stageFourActionForbidden(input);
+    }
+
+    if (product.currentStage !== 'STAGE_4') {
+      throw new ForbiddenException({
+        code: 'STAGE_FOUR_TEMPLATE_STAGE_INVALID',
+        message: 'Stage 4 templates can only be edited while the product is in Stage 4.',
+      });
+    }
+
+    switch (input.resource) {
+      case PolicyResource.LAUNCH_CONFIRMATIONS:
+        if (
+          this.isAssignedClusterManager(input.actor, product) ||
+          this.isAssignedMarketingOwner(input.actor, product)
+        ) {
+          return;
+        }
+
+        break;
+      case PolicyResource.SELL_IN_REPORTS:
+        if (
+          this.isAssignedClusterManager(input.actor, product) ||
+          input.actor.role === UserRole.SPDM_PRODUCT_OPS
+        ) {
+          return;
+        }
+
+        break;
+      case PolicyResource.WEEKLY_FEEDBACK_LOGS:
+        if (
+          this.isAssignedMarketingOwner(input.actor, product) ||
+          input.actor.role === UserRole.KD_AFTER_SALES
+        ) {
+          return;
+        }
+
+        break;
+      case PolicyResource.DAY_30_REVIEWS:
+        if (
+          this.isAssignedCommercialOwner(input.actor, product) ||
+          this.isAssignedFinanceOwner(input.actor, product) ||
+          input.actor.role === UserRole.COO_EXECUTIVE_APPROVER
+        ) {
+          return;
+        }
+
+        break;
+      default:
+        break;
+    }
+
+    throw this.stageFourActionForbidden(input);
+  }
+
   private async getProductOrThrow(productId?: string): Promise<ProductRecord> {
     if (!productId) {
       throw new ForbiddenException({
@@ -374,6 +451,22 @@ export class AuthorizationPolicyService {
     }
   }
 
+  private isAssignedClusterManager(actor: AuthenticatedUser, product: ProductRecord): boolean {
+    return actor.role === UserRole.CLUSTER_MANAGER && product.clusterOwnerUserIds.includes(actor.id);
+  }
+
+  private isAssignedCommercialOwner(actor: AuthenticatedUser, product: ProductRecord): boolean {
+    return actor.role === UserRole.GM_COMMERCIAL_OWNER && product.commercialOwnerUserId === actor.id;
+  }
+
+  private isAssignedFinanceOwner(actor: AuthenticatedUser, product: ProductRecord): boolean {
+    return actor.role === UserRole.FINANCE_MANAGER && product.financeOwnerUserId === actor.id;
+  }
+
+  private isAssignedMarketingOwner(actor: AuthenticatedUser, product: ProductRecord): boolean {
+    return actor.role === UserRole.MARKETING_GTM_OWNER && product.marketingOwnerUserId === actor.id;
+  }
+
   private canManageGenericWorkflow(
     actor: AuthenticatedUser,
     product: ProductRecord,
@@ -409,6 +502,13 @@ export class AuthorizationPolicyService {
     return new ForbiddenException({
       code: 'PRODUCT_ACTION_FORBIDDEN',
       message: `Role ${role} cannot ${action.toLowerCase()} this product.`,
+    });
+  }
+
+  private stageFourActionForbidden(input: AuthorizationInput): ForbiddenException {
+    return new ForbiddenException({
+      code: 'STAGE_FOUR_TEMPLATE_ACTION_FORBIDDEN',
+      message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} ${input.resource.toLowerCase()}.`,
     });
   }
 }

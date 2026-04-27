@@ -15,7 +15,7 @@ export class WeeklyFeedbackLogsController {
   constructor(private readonly weeklyFeedbackLogsService: WeeklyFeedbackLogsService) {}
 
   @Post()
-  @Authorize(PolicyResource.PRODUCTS, StageAction.EDIT)
+  @Authorize(PolicyResource.WEEKLY_FEEDBACK_LOGS, StageAction.EDIT)
   async create(
     @Param('productId') productId: string,
     @Body() input: CreateWeeklyFeedbackLogDto,
@@ -25,14 +25,14 @@ export class WeeklyFeedbackLogsController {
   }
 
   @Get()
-  @Authorize(PolicyResource.PRODUCTS, StageAction.VIEW)
+  @Authorize(PolicyResource.WEEKLY_FEEDBACK_LOGS, StageAction.VIEW)
   async list(@Param('productId') productId: string): Promise<WeeklyFeedbackLogResponseDto[]> {
     const records = await this.weeklyFeedbackLogsService.list(productId);
     return records.map((record) => WeeklyFeedbackLogResponseDto.fromRecord(record));
   }
 
   @Get(':logId')
-  @Authorize(PolicyResource.PRODUCTS, StageAction.VIEW)
+  @Authorize(PolicyResource.WEEKLY_FEEDBACK_LOGS, StageAction.VIEW)
   async findOne(
     @Param('productId') productId: string,
     @Param('logId') logId: string,
@@ -42,7 +42,7 @@ export class WeeklyFeedbackLogsController {
   }
 
   @Patch(':logId')
-  @Authorize(PolicyResource.PRODUCTS, StageAction.EDIT)
+  @Authorize(PolicyResource.WEEKLY_FEEDBACK_LOGS, StageAction.EDIT)
   async update(
     @Param('productId') productId: string,
     @Param('logId') logId: string,

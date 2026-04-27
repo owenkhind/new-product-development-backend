@@ -15,7 +15,7 @@ export class LaunchConfirmationsController {
   constructor(private readonly launchConfirmationsService: LaunchConfirmationsService) {}
 
   @Post()
-  @Authorize(PolicyResource.PRODUCTS, StageAction.EDIT)
+  @Authorize(PolicyResource.LAUNCH_CONFIRMATIONS, StageAction.EDIT)
   async create(
     @Param('productId') productId: string,
     @Body() input: CreateLaunchConfirmationDto,
@@ -25,14 +25,14 @@ export class LaunchConfirmationsController {
   }
 
   @Get()
-  @Authorize(PolicyResource.PRODUCTS, StageAction.VIEW)
+  @Authorize(PolicyResource.LAUNCH_CONFIRMATIONS, StageAction.VIEW)
   async findOne(@Param('productId') productId: string): Promise<LaunchConfirmationResponseDto> {
     const record = await this.launchConfirmationsService.findOne(productId);
     return LaunchConfirmationResponseDto.fromRecord(record);
   }
 
   @Patch()
-  @Authorize(PolicyResource.PRODUCTS, StageAction.EDIT)
+  @Authorize(PolicyResource.LAUNCH_CONFIRMATIONS, StageAction.EDIT)
   async update(
     @Param('productId') productId: string,
     @Body() input: UpdateLaunchConfirmationDto,

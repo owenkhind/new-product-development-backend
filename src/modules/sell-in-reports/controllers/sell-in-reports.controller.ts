@@ -15,7 +15,7 @@ export class SellInReportsController {
   constructor(private readonly sellInReportsService: SellInReportsService) {}
 
   @Post()
-  @Authorize(PolicyResource.PRODUCTS, StageAction.EDIT)
+  @Authorize(PolicyResource.SELL_IN_REPORTS, StageAction.EDIT)
   async create(
     @Param('productId') productId: string,
     @Body() input: CreateSellInReportDto,
@@ -25,14 +25,14 @@ export class SellInReportsController {
   }
 
   @Get()
-  @Authorize(PolicyResource.PRODUCTS, StageAction.VIEW)
+  @Authorize(PolicyResource.SELL_IN_REPORTS, StageAction.VIEW)
   async list(@Param('productId') productId: string): Promise<SellInReportResponseDto[]> {
     const records = await this.sellInReportsService.list(productId);
     return records.map((record) => SellInReportResponseDto.fromRecord(record));
   }
 
   @Get(':reportId')
-  @Authorize(PolicyResource.PRODUCTS, StageAction.VIEW)
+  @Authorize(PolicyResource.SELL_IN_REPORTS, StageAction.VIEW)
   async findOne(
     @Param('productId') productId: string,
     @Param('reportId') reportId: string,
@@ -42,7 +42,7 @@ export class SellInReportsController {
   }
 
   @Patch(':reportId')
-  @Authorize(PolicyResource.PRODUCTS, StageAction.EDIT)
+  @Authorize(PolicyResource.SELL_IN_REPORTS, StageAction.EDIT)
   async update(
     @Param('productId') productId: string,
     @Param('reportId') reportId: string,

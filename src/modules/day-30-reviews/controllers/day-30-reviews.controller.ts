@@ -15,7 +15,7 @@ export class Day30ReviewsController {
   constructor(private readonly day30ReviewsService: Day30ReviewsService) {}
 
   @Post()
-  @Authorize(PolicyResource.PRODUCTS, StageAction.EDIT)
+  @Authorize(PolicyResource.DAY_30_REVIEWS, StageAction.EDIT)
   async create(
     @Param('productId') productId: string,
     @Body() input: CreateDay30ReviewDto,
@@ -25,14 +25,14 @@ export class Day30ReviewsController {
   }
 
   @Get()
-  @Authorize(PolicyResource.PRODUCTS, StageAction.VIEW)
+  @Authorize(PolicyResource.DAY_30_REVIEWS, StageAction.VIEW)
   async findOne(@Param('productId') productId: string): Promise<Day30ReviewResponseDto> {
     const record = await this.day30ReviewsService.findOne(productId);
     return Day30ReviewResponseDto.fromRecord(record);
   }
 
   @Patch()
-  @Authorize(PolicyResource.PRODUCTS, StageAction.EDIT)
+  @Authorize(PolicyResource.DAY_30_REVIEWS, StageAction.EDIT)
   async update(
     @Param('productId') productId: string,
     @Body() input: UpdateDay30ReviewDto,

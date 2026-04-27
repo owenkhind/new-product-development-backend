@@ -391,6 +391,224 @@ describe('AuthorizationPolicyService', () => {
     );
   });
 
+  it('tightens Stage 4 template editing by feature responsibility', async () => {
+    const service = new AuthorizationPolicyService(
+      {} as never,
+      {
+        findById: async () =>
+          createProductRecord({
+            currentStage: ProductStage.STAGE_4,
+          }),
+      } as never,
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.clusterManager,
+          role: UserRole.CLUSTER_MANAGER,
+        },
+        resource: PolicyResource.LAUNCH_CONFIRMATIONS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.marketingOwner,
+          role: UserRole.MARKETING_GTM_OWNER,
+        },
+        resource: PolicyResource.LAUNCH_CONFIRMATIONS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.clusterManager,
+          role: UserRole.CLUSTER_MANAGER,
+        },
+        resource: PolicyResource.SELL_IN_REPORTS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.sourcingManager,
+          role: UserRole.SPDM_PRODUCT_OPS,
+        },
+        resource: PolicyResource.SELL_IN_REPORTS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.marketingOwner,
+          role: UserRole.MARKETING_GTM_OWNER,
+        },
+        resource: PolicyResource.WEEKLY_FEEDBACK_LOGS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.qaReviewer,
+          role: UserRole.KD_AFTER_SALES,
+        },
+        resource: PolicyResource.WEEKLY_FEEDBACK_LOGS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.commercialOwner,
+          role: UserRole.GM_COMMERCIAL_OWNER,
+        },
+        resource: PolicyResource.DAY_30_REVIEWS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.financeOwner,
+          role: UserRole.FINANCE_MANAGER,
+        },
+        resource: PolicyResource.DAY_30_REVIEWS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.cooApprover,
+          role: UserRole.COO_EXECUTIVE_APPROVER,
+        },
+        resource: PolicyResource.DAY_30_REVIEWS,
+        targetId: product.id,
+      }),
+    );
+  });
+
+  it('rejects wrong-role and wrong-stage Stage 4 template edits', async () => {
+    const stageFourService = new AuthorizationPolicyService(
+      {} as never,
+      {
+        findById: async () =>
+          createProductRecord({
+            currentStage: ProductStage.STAGE_4,
+          }),
+      } as never,
+    );
+
+    await assert.rejects(
+      stageFourService.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.productOwner,
+          role: UserRole.PRODUCT_MANAGER,
+        },
+        resource: PolicyResource.LAUNCH_CONFIRMATIONS,
+        targetId: product.id,
+      }),
+      ForbiddenException,
+    );
+
+    await assert.rejects(
+      stageFourService.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.financeOwner,
+          role: UserRole.FINANCE_MANAGER,
+        },
+        resource: PolicyResource.WEEKLY_FEEDBACK_LOGS,
+        targetId: product.id,
+      }),
+      ForbiddenException,
+    );
+
+    const wrongStageService = new AuthorizationPolicyService(
+      {} as never,
+      {
+        findById: async () =>
+          createProductRecord({
+            currentStage: ProductStage.STAGE_3,
+          }),
+      } as never,
+    );
+
+    await assert.rejects(
+      wrongStageService.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.clusterManager,
+          role: UserRole.CLUSTER_MANAGER,
+        },
+        resource: PolicyResource.SELL_IN_REPORTS,
+        targetId: product.id,
+      }),
+      ForbiddenException,
+    );
+  });
+
+  it('keeps Stage 4 template view access product-scoped', async () => {
+    const service = new AuthorizationPolicyService(
+      {} as never,
+      {
+        findById: async () =>
+          createProductRecord({
+            currentStage: ProductStage.STAGE_4,
+          }),
+      } as never,
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.VIEW,
+        actor: {
+          id: testIds.clusterManager,
+          role: UserRole.CLUSTER_MANAGER,
+        },
+        resource: PolicyResource.WEEKLY_FEEDBACK_LOGS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.rejects(
+      service.assertAuthorized({
+        action: StageAction.VIEW,
+        actor: {
+          id: testIds.sourcingManager,
+          role: UserRole.SOURCING_MANAGER,
+        },
+        resource: PolicyResource.DAY_30_REVIEWS,
+        targetId: product.id,
+      }),
+      ForbiddenException,
+    );
+  });
+
   it('allows assigned users to view gate decisions and audit logs', async () => {
     const service = new AuthorizationPolicyService(
       {} as never,
