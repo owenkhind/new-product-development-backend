@@ -277,12 +277,12 @@ These rules should not be buried in controllers.
 
 ## API contract design
 
-- [ ] Standardize route naming under `/v1`
-- [ ] Separate request DTOs from response DTOs
-- [ ] Add structured error responses with `code`, `message`, `details`, and `requestId`
+- [x] Standardize route naming under `/v1`
+- [x] Separate request DTOs from response DTOs
+- [x] Add structured error responses with `code`, `message`, `details`, and `requestId`
 - [ ] Decide create vs draft-save vs submit endpoints for templates
 - [ ] Decide whether templates are editable after submission or must become immutable snapshots
-- [ ] Add pagination for recurring reports and portfolio views
+- [x] Add pagination for recurring reports and portfolio views
 
 ---
 
@@ -299,10 +299,10 @@ These rules should not be buried in controllers.
 
 ## Testing and reliability
 
-- [ ] Add unit tests for services and policy logic
-- [ ] Add integration-style tests for main API paths
-- [ ] Test invalid workflow transitions
-- [ ] Test GP floor enforcement
+- [x] Add unit tests for services and policy logic
+- [x] Add integration-style tests for main API paths
+- [x] Test invalid workflow transitions
+- [x] Test GP floor enforcement
 - [ ] Test ART scoring logic
 - [x] Test approval and audit log creation
 - [x] Test repeated report creation for Stage 5 scorecards and Stage 6 clearance trackers
@@ -312,11 +312,11 @@ These rules should not be buried in controllers.
 
 ## Documentation and developer experience
 
-- [ ] Write README with setup, architecture, and module map
-- [ ] Document the stage-gate flow and template coverage
-- [ ] Document environment variables and database setup
-- [ ] Document assumptions and unresolved business rules
-- [ ] Add example API requests for Stage 1 and Stage 2
+- [x] Write README with setup, architecture, and module map
+- [x] Document the stage-gate flow and template coverage
+- [x] Document environment variables and database setup
+- [x] Document assumptions and unresolved business rules
+- [x] Add example API requests for Stage 1 and Stage 2
 
 ---
 

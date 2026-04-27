@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 
+import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 import { PolicyResource } from '../../../enums/policy-resource.enum';
 import { StageAction } from '../../../enums/stage-action.enum';
 import { Authorize } from '../../../guards/authorize.decorator';
 import { PoliciesGuard } from '../../../guards/policies.guard';
 import { CreateSellInReportDto } from '../dto/create-sell-in-report.dto';
+import { ListSellInReportsResponseDto } from '../dto/list-sell-in-reports-response.dto';
 import { SellInReportResponseDto } from '../dto/sell-in-report-response.dto';
 import { UpdateSellInReportDto } from '../dto/update-sell-in-report.dto';
 import { SellInReportsService } from '../services/sell-in-reports.service';
@@ -26,9 +28,19 @@ export class SellInReportsController {
 
   @Get()
   @Authorize(PolicyResource.SELL_IN_REPORTS, StageAction.VIEW)
-  async list(@Param('productId') productId: string): Promise<SellInReportResponseDto[]> {
-    const records = await this.sellInReportsService.list(productId);
-    return records.map((record) => SellInReportResponseDto.fromRecord(record));
+  async list(
+    @Param('productId') productId: string,
+    @Query() query: PaginationQueryDto,
+  ): Promise<ListSellInReportsResponseDto> {
+    const result = await this.sellInReportsService.list(productId, query);
+    return {
+      data: result.rows.map((record) => SellInReportResponseDto.fromRecord(record)),
+      meta: {
+        limit: query.limit,
+        page: query.page,
+        total: result.total,
+      },
+    };
   }
 
   @Get(':reportId')

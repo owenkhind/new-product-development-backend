@@ -19,6 +19,11 @@ type SellInReportRow = QueryResultRow & {
 };
 
 type CreateSellInReportInput = Omit<SellInReportRecord, 'createdAt' | 'updatedAt'>;
+type ListSellInReportsFilters = {
+  limit: number;
+  offset: number;
+  productId: string;
+};
 type UpdateSellInReportInput = Partial<Omit<CreateSellInReportInput, 'id' | 'productId'>>;
 
 @Injectable()
@@ -60,18 +65,33 @@ export class SellInReportsRepository {
     return this.mapRow(result.rows[0]);
   }
 
-  async listByProductId(productId: string): Promise<SellInReportRecord[]> {
-    const result = await this.databaseService.query<SellInReportRow>(
-      `
-        SELECT *
-        FROM ${this.tableName}
-        WHERE product_id = $1
-        ORDER BY report_period_start DESC, created_at DESC
-      `,
-      [productId],
-    );
+  async listByProductId(filters: ListSellInReportsFilters): Promise<{ rows: SellInReportRecord[]; total: number }> {
+    const [countResult, rowsResult] = await Promise.all([
+      this.databaseService.query<{ total: string }>(
+        `
+          SELECT COUNT(*)::text AS total
+          FROM ${this.tableName}
+          WHERE product_id = $1
+        `,
+        [filters.productId],
+      ),
+      this.databaseService.query<SellInReportRow>(
+        `
+          SELECT *
+          FROM ${this.tableName}
+          WHERE product_id = $1
+          ORDER BY report_period_start DESC, created_at DESC
+          LIMIT $2
+          OFFSET $3
+        `,
+        [filters.productId, filters.limit, filters.offset],
+      ),
+    ]);
 
-    return result.rows.map((row) => this.mapRow(row));
+    return {
+      rows: rowsResult.rows.map((row) => this.mapRow(row)),
+      total: Number(countResult.rows[0]?.total ?? 0),
+    };
   }
 
   async findById(productId: string, reportId: string): Promise<SellInReportRecord | null> {

@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 
 import { FeedbackSeverity } from '../../../enums/feedback-severity.enum';
 import { ProductStage } from '../../../enums/product-stage.enum';
+import type { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 import { ProductsRepository } from '../../products/repositories/products.repository';
 import type {
   CreateWeeklyFeedbackItemDto,
@@ -31,9 +32,16 @@ export class WeeklyFeedbackLogsService {
     });
   }
 
-  async list(productId: string): Promise<WeeklyFeedbackLogRecord[]> {
+  async list(
+    productId: string,
+    query: PaginationQueryDto,
+  ): Promise<{ rows: WeeklyFeedbackLogRecord[]; total: number }> {
     await this.assertProductExists(productId);
-    return this.weeklyFeedbackLogsRepository.listByProductId(productId);
+    return this.weeklyFeedbackLogsRepository.listByProductId({
+      limit: query.limit,
+      offset: (query.page - 1) * query.limit,
+      productId,
+    });
   }
 
   async findOne(productId: string, logId: string): Promise<WeeklyFeedbackLogRecord> {

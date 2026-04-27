@@ -25,6 +25,11 @@ type ProductScorecardRow = QueryResultRow & {
 };
 
 type CreateProductScorecardInput = Omit<ProductScorecardRecord, 'createdAt' | 'updatedAt'>;
+type ListProductScorecardsFilters = {
+  limit: number;
+  offset: number;
+  productId: string;
+};
 type UpdateProductScorecardInput = Partial<Omit<CreateProductScorecardInput, 'id' | 'productId'>>;
 
 @Injectable()
@@ -76,15 +81,45 @@ export class ProductScorecardsRepository {
     return this.mapRow(result.rows[0]);
   }
 
-  async listByProductId(productId: string): Promise<ProductScorecardRecord[]> {
+  async listByProductId(filters: ListProductScorecardsFilters): Promise<{ rows: ProductScorecardRecord[]; total: number }> {
+    const [countResult, rowsResult] = await Promise.all([
+      this.databaseService.query<{ total: string }>(
+        `
+          SELECT COUNT(*)::text AS total
+          FROM ${this.tableName}
+          WHERE product_id = $1
+        `,
+        [filters.productId],
+      ),
+      this.databaseService.query<ProductScorecardRow>(
+        `
+          SELECT *
+          FROM ${this.tableName}
+          WHERE product_id = $1
+          ORDER BY review_date DESC, created_at DESC
+          LIMIT $2
+          OFFSET $3
+        `,
+        [filters.productId, filters.limit, filters.offset],
+      ),
+    ]);
+
+    return {
+      rows: rowsResult.rows.map((row) => this.mapRow(row)),
+      total: Number(countResult.rows[0]?.total ?? 0),
+    };
+  }
+
+  async listLatestByProductId(productId: string, limit: number): Promise<ProductScorecardRecord[]> {
     const result = await this.databaseService.query<ProductScorecardRow>(
       `
         SELECT *
         FROM ${this.tableName}
         WHERE product_id = $1
         ORDER BY review_date DESC, created_at DESC
+        LIMIT $2
       `,
-      [productId],
+      [productId, limit],
     );
 
     return result.rows.map((row) => this.mapRow(row));

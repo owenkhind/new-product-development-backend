@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 
+import type { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 import { PortfolioReviewStatus } from '../../../enums/portfolio-review-status.enum';
 import type { CreatePortfolioUpdateDto, CreatePortfolioUpdateRowDto } from '../dto/create-portfolio-update.dto';
 import type { UpdatePortfolioUpdateDto } from '../dto/update-portfolio-update.dto';
@@ -21,8 +22,11 @@ export class PortfolioUpdatesService {
     });
   }
 
-  list(): Promise<PortfolioUpdateRecord[]> {
-    return this.portfolioUpdatesRepository.list();
+  list(query: PaginationQueryDto): Promise<{ rows: PortfolioUpdateRecord[]; total: number }> {
+    return this.portfolioUpdatesRepository.list({
+      limit: query.limit,
+      offset: (query.page - 1) * query.limit,
+    });
   }
 
   async findOne(portfolioUpdateId: string): Promise<PortfolioUpdateRecord> {

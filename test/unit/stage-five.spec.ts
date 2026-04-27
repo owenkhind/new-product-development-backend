@@ -24,6 +24,8 @@ import {
   testIds,
 } from '../helpers/fixtures';
 
+const paginationQuery = { limit: 20, page: 1 };
+
 describe('ProductScorecardsService', () => {
   function createService(options?: {
     existingScorecards?: ReturnType<typeof createProductScorecardRecord>[];
@@ -43,7 +45,11 @@ describe('ProductScorecardsService', () => {
             isEscalationRequired: input.isEscalationRequired,
           }),
         findById: async () => existingScorecards[0] ?? null,
-        listByProductId: async () => existingScorecards,
+        listByProductId: async () => ({
+          rows: existingScorecards,
+          total: existingScorecards.length,
+        }),
+        listLatestByProductId: async () => existingScorecards,
         update: async (_productId: string, _scorecardId: string, input: { classification?: ProductScorecardClass; isEscalationRequired?: boolean }) =>
           existingScorecards[0]
             ? createProductScorecardRecord({
@@ -98,7 +104,7 @@ describe('ProductScorecardsService', () => {
 
     assert.equal(createdRecord.classification, ProductScorecardClass.C);
     assert.equal(createdRecord.isEscalationRequired, true);
-    assert.equal((await service.list(testIds.product)).length, 1);
+    assert.equal((await service.list(testIds.product, paginationQuery)).rows.length, 1);
     assert.equal((await service.findOne(testIds.product, previousC.id)).id, previousC.id);
     assert.equal((await service.update(testIds.product, previousC.id, { complaintCount: 1 })).classification, ProductScorecardClass.A);
   });
@@ -141,7 +147,7 @@ describe('PortfolioUpdatesController and Service', () => {
     const controller = new PortfolioUpdatesController({
       create: async () => record,
       findOne: async () => record,
-      list: async () => [record],
+      list: async () => ({ rows: [record], total: 1 }),
       update: async () => ({ ...record, summary: 'Updated portfolio summary' }),
     } as never);
 
@@ -155,7 +161,7 @@ describe('PortfolioUpdatesController and Service', () => {
       })),
       summary: record.summary,
     })).id, record.id);
-    assert.equal((await controller.list()).length, 1);
+    assert.equal((await controller.list(paginationQuery)).data.length, 1);
     assert.equal((await controller.findOne(record.id)).id, record.id);
     assert.equal((await controller.update(record.id, { summary: 'Updated portfolio summary' })).summary, 'Updated portfolio summary');
   });
@@ -166,7 +172,7 @@ describe('PortfolioUpdatesController and Service', () => {
       create: async (input: { cooReviewStatus: PortfolioReviewStatus }) =>
         createPortfolioUpdateRecord({ cooReviewStatus: input.cooReviewStatus }),
       findById: async () => null,
-      list: async () => [record],
+      list: async () => ({ rows: [record], total: 1 }),
       update: async () => null,
     } as never);
 
@@ -362,7 +368,7 @@ describe('Stage 5 controllers', () => {
     const scorecardController = new ProductScorecardsController({
       create: async () => scorecard,
       findOne: async () => scorecard,
-      list: async () => [scorecard],
+      list: async () => ({ rows: [scorecard], total: 1 }),
       update: async () => ({ ...scorecard, notes: 'Updated' }),
     } as never);
     const recommendation = createRevampEolRecommendationRecord();
@@ -383,7 +389,7 @@ describe('Stage 5 controllers', () => {
       reviewDate: '2026-07-15',
       sellThroughPercent: '85.00',
     })).id, scorecard.id);
-    assert.equal((await scorecardController.list(testIds.product)).length, 1);
+    assert.equal((await scorecardController.list(testIds.product, paginationQuery)).data.length, 1);
     assert.equal((await recommendationController.create(testIds.product, {
       eolOption: 'Retire',
       recommendationOutcome: RevampEolRecommendationOutcome.EOL,

@@ -17,6 +17,10 @@ type PortfolioUpdateRow = QueryResultRow & {
 };
 
 type CreatePortfolioUpdateInput = Omit<PortfolioUpdateRecord, 'createdAt' | 'updatedAt'>;
+type ListPortfolioUpdatesFilters = {
+  limit: number;
+  offset: number;
+};
 type UpdatePortfolioUpdateInput = Partial<Omit<CreatePortfolioUpdateInput, 'id'>>;
 
 @Injectable()
@@ -52,16 +56,30 @@ export class PortfolioUpdatesRepository {
     return this.mapRow(result.rows[0]);
   }
 
-  async list(): Promise<PortfolioUpdateRecord[]> {
-    const result = await this.databaseService.query<PortfolioUpdateRow>(
-      `
-        SELECT *
-        FROM ${this.tableName}
-        ORDER BY review_quarter DESC, created_at DESC
-      `,
-    );
+  async list(filters: ListPortfolioUpdatesFilters): Promise<{ rows: PortfolioUpdateRecord[]; total: number }> {
+    const [countResult, rowsResult] = await Promise.all([
+      this.databaseService.query<{ total: string }>(
+        `
+          SELECT COUNT(*)::text AS total
+          FROM ${this.tableName}
+        `,
+      ),
+      this.databaseService.query<PortfolioUpdateRow>(
+        `
+          SELECT *
+          FROM ${this.tableName}
+          ORDER BY review_quarter DESC, created_at DESC
+          LIMIT $1
+          OFFSET $2
+        `,
+        [filters.limit, filters.offset],
+      ),
+    ]);
 
-    return result.rows.map((row) => this.mapRow(row));
+    return {
+      rows: rowsResult.rows.map((row) => this.mapRow(row)),
+      total: Number(countResult.rows[0]?.total ?? 0),
+    };
   }
 
   async findById(portfolioUpdateId: string): Promise<PortfolioUpdateRecord | null> {

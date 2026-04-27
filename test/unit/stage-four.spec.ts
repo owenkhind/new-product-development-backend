@@ -27,6 +27,8 @@ import {
   testIds,
 } from '../helpers/fixtures';
 
+const paginationQuery = { limit: 20, page: 1 };
+
 describe('LaunchConfirmationsController', () => {
   const record = createLaunchConfirmationRecord();
 
@@ -158,7 +160,7 @@ describe('SellInReportsController', () => {
     const controller = new SellInReportsController({
       create: async () => record,
       findOne: async () => record,
-      list: async () => [record],
+      list: async () => ({ rows: [record], total: 1 }),
       update: async () => ({ ...record, notes: 'Updated sell-in note' }),
     } as never);
 
@@ -175,7 +177,7 @@ describe('SellInReportsController', () => {
     });
 
     assert.equal(response.totalSellInUnits, 200);
-    assert.equal((await controller.list(testIds.product)).length, 1);
+    assert.equal((await controller.list(testIds.product, paginationQuery)).data.length, 1);
     assert.equal((await controller.findOne(testIds.product, record.id)).id, record.id);
     assert.equal((await controller.update(testIds.product, record.id, { notes: 'Updated sell-in note' })).notes, 'Updated sell-in note');
   });
@@ -200,7 +202,10 @@ describe('SellInReportsService', () => {
             totalSellInValue: input.totalSellInValue,
           }),
         findById: async () => existingRecord,
-        listByProductId: async () => (existingRecord ? [existingRecord] : []),
+        listByProductId: async () => ({
+          rows: existingRecord ? [existingRecord] : [],
+          total: existingRecord ? 1 : 0,
+        }),
         update: async (_productId: string, _reportId: string, input: { notes?: string }) =>
           existingRecord ? createSellInReportRecord({ notes: input.notes ?? existingRecord.notes }) : null,
       } as never,
@@ -229,7 +234,7 @@ describe('SellInReportsService', () => {
 
     assert.equal(record.totalSellInUnits, 12);
     assert.equal(record.totalSellInValue, '240.00');
-    assert.equal((await createService().list(testIds.product)).length, 1);
+    assert.equal((await createService().list(testIds.product, paginationQuery)).rows.length, 1);
   });
 
   it('rejects locked-stage, missing product, and missing update cases', async () => {
@@ -251,7 +256,7 @@ describe('SellInReportsService', () => {
       ),
       BadRequestException,
     );
-    await assert.rejects(createService({ product: null }).list(testIds.product), NotFoundException);
+    await assert.rejects(createService({ product: null }).list(testIds.product, paginationQuery), NotFoundException);
     await assert.rejects(createService({ existingRecord: null }).update(testIds.product, testIds.gateDecision, {}), NotFoundException);
   });
 });
@@ -271,7 +276,10 @@ describe('WeeklyFeedbackLogsService', () => {
       {
         create: async () => createWeeklyFeedbackLogRecord(),
         findById: async () => existingRecord,
-        listByProductId: async () => (existingRecord ? [existingRecord] : []),
+        listByProductId: async () => ({
+          rows: existingRecord ? [existingRecord] : [],
+          total: existingRecord ? 1 : 0,
+        }),
         update: async (_productId: string, _logId: string, input: { summary?: string }) =>
           existingRecord ? createWeeklyFeedbackLogRecord({ summary: input.summary ?? existingRecord.summary }) : null,
       } as never,
@@ -303,7 +311,7 @@ describe('WeeklyFeedbackLogsService', () => {
       summary: 'Good',
       weekStartDate: '2026-05-15',
     })).productId, testIds.product);
-    assert.equal((await createService().list(testIds.product)).length, 1);
+    assert.equal((await createService().list(testIds.product, paginationQuery)).rows.length, 1);
   });
 
   it('rejects locked-stage, missing product, and missing update cases', async () => {
@@ -325,7 +333,7 @@ describe('WeeklyFeedbackLogsService', () => {
       ),
       BadRequestException,
     );
-    await assert.rejects(createService({ product: null }).list(testIds.product), NotFoundException);
+    await assert.rejects(createService({ product: null }).list(testIds.product, paginationQuery), NotFoundException);
     await assert.rejects(createService({ existingRecord: null }).update(testIds.product, testIds.gateDecision, {}), NotFoundException);
   });
 });

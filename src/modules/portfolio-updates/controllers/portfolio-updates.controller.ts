@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 
+import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 import { PolicyResource } from '../../../enums/policy-resource.enum';
 import { StageAction } from '../../../enums/stage-action.enum';
 import { Authorize } from '../../../guards/authorize.decorator';
 import { PoliciesGuard } from '../../../guards/policies.guard';
 import { CreatePortfolioUpdateDto } from '../dto/create-portfolio-update.dto';
+import { ListPortfolioUpdatesResponseDto } from '../dto/list-portfolio-updates-response.dto';
 import { PortfolioUpdateResponseDto } from '../dto/portfolio-update-response.dto';
 import { UpdatePortfolioUpdateDto } from '../dto/update-portfolio-update.dto';
 import { PortfolioUpdatesService } from '../services/portfolio-updates.service';
@@ -23,9 +25,16 @@ export class PortfolioUpdatesController {
 
   @Get()
   @Authorize(PolicyResource.PORTFOLIO_UPDATES, StageAction.VIEW)
-  async list(): Promise<PortfolioUpdateResponseDto[]> {
-    const records = await this.portfolioUpdatesService.list();
-    return records.map((record) => PortfolioUpdateResponseDto.fromRecord(record));
+  async list(@Query() query: PaginationQueryDto): Promise<ListPortfolioUpdatesResponseDto> {
+    const result = await this.portfolioUpdatesService.list(query);
+    return {
+      data: result.rows.map((record) => PortfolioUpdateResponseDto.fromRecord(record)),
+      meta: {
+        limit: query.limit,
+        page: query.page,
+        total: result.total,
+      },
+    };
   }
 
   @Get(':portfolioUpdateId')

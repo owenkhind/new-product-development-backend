@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { randomUUID } from 'node:crypto';
 
 import { ProductStage } from '../../../enums/product-stage.enum';
+import type { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 import { ProductsRepository } from '../../products/repositories/products.repository';
 import type { CreateSellInReportAccountDto, CreateSellInReportDto } from '../dto/create-sell-in-report.dto';
 import type { UpdateSellInReportDto } from '../dto/update-sell-in-report.dto';
@@ -32,9 +33,16 @@ export class SellInReportsService {
     });
   }
 
-  async list(productId: string): Promise<SellInReportRecord[]> {
+  async list(
+    productId: string,
+    query: PaginationQueryDto,
+  ): Promise<{ rows: SellInReportRecord[]; total: number }> {
     await this.assertProductExists(productId);
-    return this.sellInReportsRepository.listByProductId(productId);
+    return this.sellInReportsRepository.listByProductId({
+      limit: query.limit,
+      offset: (query.page - 1) * query.limit,
+      productId,
+    });
   }
 
   async findOne(productId: string, reportId: string): Promise<SellInReportRecord> {

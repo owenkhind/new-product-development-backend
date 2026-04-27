@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 
 import { ProductScorecardClass } from '../../../enums/product-scorecard-class.enum';
 import { ProductStage } from '../../../enums/product-stage.enum';
+import type { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 import { ProductsRepository } from '../../products/repositories/products.repository';
 import type { CreateProductScorecardDto } from '../dto/create-product-scorecard.dto';
 import type { UpdateProductScorecardDto } from '../dto/update-product-scorecard.dto';
@@ -26,7 +27,7 @@ export class ProductScorecardsService {
     await this.assertStageFiveEditable(productId);
 
     const classificationResult = ProductScorecardsService.classify(input);
-    const existingScorecards = await this.productScorecardsRepository.listByProductId(productId);
+    const existingScorecards = await this.productScorecardsRepository.listLatestByProductId(productId, 1);
 
     return this.productScorecardsRepository.create({
       classification: classificationResult.classification,
@@ -45,9 +46,16 @@ export class ProductScorecardsService {
     });
   }
 
-  async list(productId: string): Promise<ProductScorecardRecord[]> {
+  async list(
+    productId: string,
+    query: PaginationQueryDto,
+  ): Promise<{ rows: ProductScorecardRecord[]; total: number }> {
     await this.assertProductExists(productId);
-    return this.productScorecardsRepository.listByProductId(productId);
+    return this.productScorecardsRepository.listByProductId({
+      limit: query.limit,
+      offset: (query.page - 1) * query.limit,
+      productId,
+    });
   }
 
   async findOne(productId: string, scorecardId: string): Promise<ProductScorecardRecord> {
@@ -85,7 +93,7 @@ export class ProductScorecardsService {
       sellThroughPercent: input.sellThroughPercent ?? existingRecord.sellThroughPercent,
     };
     const classificationResult = ProductScorecardsService.classify(mergedInput);
-    const existingScorecards = await this.productScorecardsRepository.listByProductId(productId);
+    const existingScorecards = await this.productScorecardsRepository.listLatestByProductId(productId, 2);
 
     const updatedRecord = await this.productScorecardsRepository.update(productId, scorecardId, {
       classification: classificationResult.classification,

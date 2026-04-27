@@ -36,6 +36,8 @@ import {
   createValidationPipe,
 } from '../helpers/create-http-test-app';
 
+const paginationQuery = { limit: 20, page: 1 };
+
 describe('Stage 5 modules wiring (e2e)', () => {
   let app: Awaited<ReturnType<typeof createHttpTestApp>>['app'];
   let scorecardsController: ProductScorecardsController;
@@ -50,13 +52,13 @@ describe('Stage 5 modules wiring (e2e)', () => {
   const scorecardsServiceMock = {
     create: async () => scorecardRecord,
     findOne: async () => scorecardRecord,
-    list: async () => [scorecardRecord],
+    list: async () => ({ rows: [scorecardRecord], total: 1 }),
     update: async () => ({ ...scorecardRecord, notes: 'Updated scorecard' }),
   };
   const portfolioUpdatesServiceMock = {
     create: async () => portfolioUpdateRecord,
     findOne: async () => portfolioUpdateRecord,
-    list: async () => [portfolioUpdateRecord],
+    list: async () => ({ rows: [portfolioUpdateRecord], total: 1 }),
     update: async () => ({ ...portfolioUpdateRecord, summary: 'Updated portfolio' }),
   };
   const recommendationsServiceMock = {
@@ -209,8 +211,8 @@ describe('Stage 5 modules wiring (e2e)', () => {
     assert.equal(scorecardResponse.id, scorecardRecord.id);
     assert.equal(portfolioResponse.id, portfolioUpdateRecord.id);
     assert.equal(recommendationResponse.id, recommendationRecord.id);
-    assert.equal((await scorecardsController.list(testIds.product)).length, 1);
-    assert.equal((await portfolioUpdatesController.list()).length, 1);
+    assert.equal((await scorecardsController.list(testIds.product, paginationQuery)).data.length, 1);
+    assert.equal((await portfolioUpdatesController.list(paginationQuery)).data.length, 1);
     assert.equal((await recommendationsController.update(testIds.product, { recommendationSummary: 'Updated recommendation' })).recommendationSummary, 'Updated recommendation');
   });
 });

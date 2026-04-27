@@ -38,6 +38,8 @@ import {
   createValidationPipe,
 } from '../helpers/create-http-test-app';
 
+const paginationQuery = { limit: 20, page: 1 };
+
 describe('Stage 4 modules wiring (e2e)', () => {
   let app: Awaited<ReturnType<typeof createHttpTestApp>>['app'];
   let launchConfirmationsController: LaunchConfirmationsController;
@@ -75,7 +77,7 @@ describe('Stage 4 modules wiring (e2e)', () => {
           useValue: {
             create: async () => sellInReportRecord,
             findOne: async () => sellInReportRecord,
-            list: async () => [sellInReportRecord],
+            list: async () => ({ rows: [sellInReportRecord], total: 1 }),
             update: async () => ({ ...sellInReportRecord, notes: 'Updated sell-in note' }),
           },
         },
@@ -84,7 +86,7 @@ describe('Stage 4 modules wiring (e2e)', () => {
           useValue: {
             create: async () => weeklyFeedbackLogRecord,
             findOne: async () => weeklyFeedbackLogRecord,
-            list: async () => [weeklyFeedbackLogRecord],
+            list: async () => ({ rows: [weeklyFeedbackLogRecord], total: 1 }),
             update: async () => ({ ...weeklyFeedbackLogRecord, summary: 'Updated feedback' }),
           },
         },
@@ -122,13 +124,13 @@ describe('Stage 4 modules wiring (e2e)', () => {
     sellInReportsController = new SellInReportsController({
       create: async () => sellInReportRecord,
       findOne: async () => sellInReportRecord,
-      list: async () => [sellInReportRecord],
+      list: async () => ({ rows: [sellInReportRecord], total: 1 }),
       update: async () => ({ ...sellInReportRecord, notes: 'Updated sell-in note' }),
     } as never);
     weeklyFeedbackLogsController = new WeeklyFeedbackLogsController({
       create: async () => weeklyFeedbackLogRecord,
       findOne: async () => weeklyFeedbackLogRecord,
-      list: async () => [weeklyFeedbackLogRecord],
+      list: async () => ({ rows: [weeklyFeedbackLogRecord], total: 1 }),
       update: async () => ({ ...weeklyFeedbackLogRecord, summary: 'Updated feedback' }),
     } as never);
     day30ReviewsController = new Day30ReviewsController({
@@ -237,8 +239,8 @@ describe('Stage 4 modules wiring (e2e)', () => {
     assert.equal(sellInResponse.id, sellInReportRecord.id);
     assert.equal(feedbackResponse.id, weeklyFeedbackLogRecord.id);
     assert.equal(day30Response.id, day30ReviewRecord.id);
-    assert.equal((await sellInReportsController.list(testIds.product)).length, 1);
-    assert.equal((await weeklyFeedbackLogsController.list(testIds.product)).length, 1);
+    assert.equal((await sellInReportsController.list(testIds.product, paginationQuery)).data.length, 1);
+    assert.equal((await weeklyFeedbackLogsController.list(testIds.product, paginationQuery)).data.length, 1);
     assert.equal((await day30ReviewsController.update(testIds.product, { reviewSummary: 'Updated review' })).reviewSummary, 'Updated review');
   });
 });

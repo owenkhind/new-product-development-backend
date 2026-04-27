@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 
+import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 import { PolicyResource } from '../../../enums/policy-resource.enum';
 import { StageAction } from '../../../enums/stage-action.enum';
 import { Authorize } from '../../../guards/authorize.decorator';
 import { PoliciesGuard } from '../../../guards/policies.guard';
 import { CreateWeeklyFeedbackLogDto } from '../dto/create-weekly-feedback-log.dto';
+import { ListWeeklyFeedbackLogsResponseDto } from '../dto/list-weekly-feedback-logs-response.dto';
 import { UpdateWeeklyFeedbackLogDto } from '../dto/update-weekly-feedback-log.dto';
 import { WeeklyFeedbackLogResponseDto } from '../dto/weekly-feedback-log-response.dto';
 import { WeeklyFeedbackLogsService } from '../services/weekly-feedback-logs.service';
@@ -26,9 +28,19 @@ export class WeeklyFeedbackLogsController {
 
   @Get()
   @Authorize(PolicyResource.WEEKLY_FEEDBACK_LOGS, StageAction.VIEW)
-  async list(@Param('productId') productId: string): Promise<WeeklyFeedbackLogResponseDto[]> {
-    const records = await this.weeklyFeedbackLogsService.list(productId);
-    return records.map((record) => WeeklyFeedbackLogResponseDto.fromRecord(record));
+  async list(
+    @Param('productId') productId: string,
+    @Query() query: PaginationQueryDto,
+  ): Promise<ListWeeklyFeedbackLogsResponseDto> {
+    const result = await this.weeklyFeedbackLogsService.list(productId, query);
+    return {
+      data: result.rows.map((record) => WeeklyFeedbackLogResponseDto.fromRecord(record)),
+      meta: {
+        limit: query.limit,
+        page: query.page,
+        total: result.total,
+      },
+    };
   }
 
   @Get(':logId')

@@ -19,6 +19,11 @@ type WeeklyFeedbackLogRow = QueryResultRow & {
 };
 
 type CreateWeeklyFeedbackLogInput = Omit<WeeklyFeedbackLogRecord, 'createdAt' | 'updatedAt'>;
+type ListWeeklyFeedbackLogsFilters = {
+  limit: number;
+  offset: number;
+  productId: string;
+};
 type UpdateWeeklyFeedbackLogInput = Partial<Omit<CreateWeeklyFeedbackLogInput, 'id' | 'productId'>>;
 
 @Injectable()
@@ -48,18 +53,33 @@ export class WeeklyFeedbackLogsRepository {
     return this.mapRow(result.rows[0]);
   }
 
-  async listByProductId(productId: string): Promise<WeeklyFeedbackLogRecord[]> {
-    const result = await this.databaseService.query<WeeklyFeedbackLogRow>(
-      `
-        SELECT *
-        FROM ${this.tableName}
-        WHERE product_id = $1
-        ORDER BY week_start_date DESC, created_at DESC
-      `,
-      [productId],
-    );
+  async listByProductId(filters: ListWeeklyFeedbackLogsFilters): Promise<{ rows: WeeklyFeedbackLogRecord[]; total: number }> {
+    const [countResult, rowsResult] = await Promise.all([
+      this.databaseService.query<{ total: string }>(
+        `
+          SELECT COUNT(*)::text AS total
+          FROM ${this.tableName}
+          WHERE product_id = $1
+        `,
+        [filters.productId],
+      ),
+      this.databaseService.query<WeeklyFeedbackLogRow>(
+        `
+          SELECT *
+          FROM ${this.tableName}
+          WHERE product_id = $1
+          ORDER BY week_start_date DESC, created_at DESC
+          LIMIT $2
+          OFFSET $3
+        `,
+        [filters.productId, filters.limit, filters.offset],
+      ),
+    ]);
 
-    return result.rows.map((row) => this.mapRow(row));
+    return {
+      rows: rowsResult.rows.map((row) => this.mapRow(row)),
+      total: Number(countResult.rows[0]?.total ?? 0),
+    };
   }
 
   async findById(productId: string, logId: string): Promise<WeeklyFeedbackLogRecord | null> {

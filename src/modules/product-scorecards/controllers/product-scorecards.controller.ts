@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 
+import { PaginationQueryDto } from '../../../common/dto/pagination-query.dto';
 import { PolicyResource } from '../../../enums/policy-resource.enum';
 import { StageAction } from '../../../enums/stage-action.enum';
 import { Authorize } from '../../../guards/authorize.decorator';
 import { PoliciesGuard } from '../../../guards/policies.guard';
 import { CreateProductScorecardDto } from '../dto/create-product-scorecard.dto';
+import { ListProductScorecardsResponseDto } from '../dto/list-product-scorecards-response.dto';
 import { ProductScorecardResponseDto } from '../dto/product-scorecard-response.dto';
 import { UpdateProductScorecardDto } from '../dto/update-product-scorecard.dto';
 import { ProductScorecardsService } from '../services/product-scorecards.service';
@@ -26,9 +28,19 @@ export class ProductScorecardsController {
 
   @Get()
   @Authorize(PolicyResource.PRODUCT_SCORECARDS, StageAction.VIEW)
-  async list(@Param('productId') productId: string): Promise<ProductScorecardResponseDto[]> {
-    const records = await this.productScorecardsService.list(productId);
-    return records.map((record) => ProductScorecardResponseDto.fromRecord(record));
+  async list(
+    @Param('productId') productId: string,
+    @Query() query: PaginationQueryDto,
+  ): Promise<ListProductScorecardsResponseDto> {
+    const result = await this.productScorecardsService.list(productId, query);
+    return {
+      data: result.rows.map((record) => ProductScorecardResponseDto.fromRecord(record)),
+      meta: {
+        limit: query.limit,
+        page: query.page,
+        total: result.total,
+      },
+    };
   }
 
   @Get(':scorecardId')
