@@ -101,6 +101,26 @@ export class RevampEolRecommendationsRepository {
     return result.rows[0] ? this.mapRow(result.rows[0]) : null;
   }
 
+  async findApprovedEolByProductId(productId: string): Promise<RevampEolRecommendationRecord | null> {
+    const result = await this.databaseService.query<RevampEolRecommendationRow>(
+      `
+        SELECT *
+        FROM ${this.tableName}
+        WHERE product_id = $1
+          AND recommendation_outcome = $2
+          AND coo_decision = $3
+        LIMIT 1
+      `,
+      [
+        productId,
+        RevampEolRecommendationOutcome.EOL,
+        RevampEolDecision.APPROVED,
+      ],
+    );
+
+    return result.rows[0] ? this.mapRow(result.rows[0]) : null;
+  }
+
   async update(
     productId: string,
     input: UpdateRevampEolRecommendationInput,

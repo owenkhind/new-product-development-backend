@@ -8,8 +8,10 @@ import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { BusinessCasesModule } from './modules/business-cases/business-cases.module';
 import { ChannelListingPlansModule } from './modules/channel-listing-plans/channel-listing-plans.module';
 import { ChannelPricingModule } from './modules/channel-pricing/channel-pricing.module';
+import { ClearancePlansModule } from './modules/clearance-plans/clearance-plans.module';
 import { CompetitorMatricesModule } from './modules/competitor-matrices/competitor-matrices.module';
 import { Day30ReviewsModule } from './modules/day-30-reviews/day-30-reviews.module';
+import { EolExecutionPlansModule } from './modules/eol-execution-plans/eol-execution-plans.module';
 import { GateDecisionsModule } from './modules/gate-decisions/gate-decisions.module';
 import { GtmPlansModule } from './modules/gtm-plans/gtm-plans.module';
 import { HealthModule } from './modules/health/health.module';
@@ -38,8 +40,10 @@ import { WorkflowModule } from './modules/workflow/workflow.module';
     BusinessCasesModule,
     ChannelListingPlansModule,
     ChannelPricingModule,
+    ClearancePlansModule,
     CompetitorMatricesModule,
     Day30ReviewsModule,
+    EolExecutionPlansModule,
     GateDecisionsModule,
     GtmPlansModule,
     HealthModule,

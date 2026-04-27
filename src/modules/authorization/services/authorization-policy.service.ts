@@ -56,6 +56,10 @@ export class AuthorizationPolicyService {
       case PolicyResource.REVAMP_EOL_RECOMMENDATIONS:
         await this.assertStageFiveTemplateAccess(input);
         return;
+      case PolicyResource.EOL_EXECUTION_PLANS:
+      case PolicyResource.CLEARANCE_PLANS:
+        await this.assertStageSixTemplateAccess(input);
+        return;
       case PolicyResource.PORTFOLIO_UPDATES:
         this.assertPortfolioUpdateAccess(input);
         return;
@@ -490,6 +494,62 @@ export class AuthorizationPolicyService {
     });
   }
 
+  private async assertStageSixTemplateAccess(input: AuthorizationInput): Promise<void> {
+    const product = await this.getProductOrThrow(input.targetId);
+
+    if (input.action === StageAction.VIEW) {
+      if (
+        this.hasGlobalProductViewAccess(input.actor.role) ||
+        this.isAssignedProductContributor(input.actor, product) ||
+        input.actor.role === UserRole.KD_AFTER_SALES ||
+        input.actor.role === UserRole.SPDM_PRODUCT_OPS
+      ) {
+        return;
+      }
+
+      throw this.productActionForbidden(input.action, input.actor.role);
+    }
+
+    if (input.action !== StageAction.EDIT) {
+      throw this.stageSixActionForbidden(input);
+    }
+
+    if (product.currentStage !== 'STAGE_6') {
+      throw new ForbiddenException({
+        code: 'STAGE_SIX_TEMPLATE_STAGE_INVALID',
+        message: 'Stage 6 templates can only be edited while the product is in Stage 6.',
+      });
+    }
+
+    switch (input.resource) {
+      case PolicyResource.EOL_EXECUTION_PLANS:
+        if (
+          this.isAssignedCommercialOwner(input.actor, product) ||
+          input.actor.role === UserRole.KD_AFTER_SALES ||
+          input.actor.role === UserRole.SPDM_PRODUCT_OPS ||
+          input.actor.role === UserRole.COO_EXECUTIVE_APPROVER
+        ) {
+          return;
+        }
+
+        break;
+      case PolicyResource.CLEARANCE_PLANS:
+        if (
+          this.isAssignedCommercialOwner(input.actor, product) ||
+          this.isAssignedFinanceOwner(input.actor, product) ||
+          input.actor.role === UserRole.COO_EXECUTIVE_APPROVER
+        ) {
+          return;
+        }
+
+        break;
+      default:
+        break;
+    }
+
+    throw this.stageSixActionForbidden(input);
+  }
+
   private async getProductOrThrow(productId?: string): Promise<ProductRecord> {
     if (!productId) {
       throw new ForbiddenException({
@@ -606,6 +666,13 @@ export class AuthorizationPolicyService {
   private stageFiveActionForbidden(input: AuthorizationInput): ForbiddenException {
     return new ForbiddenException({
       code: 'STAGE_FIVE_TEMPLATE_ACTION_FORBIDDEN',
+      message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} ${input.resource.toLowerCase()}.`,
+    });
+  }
+
+  private stageSixActionForbidden(input: AuthorizationInput): ForbiddenException {
+    return new ForbiddenException({
+      code: 'STAGE_SIX_TEMPLATE_ACTION_FORBIDDEN',
       message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} ${input.resource.toLowerCase()}.`,
     });
   }

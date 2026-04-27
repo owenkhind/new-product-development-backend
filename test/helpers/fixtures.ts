@@ -1,8 +1,10 @@
 import { AuditAction } from '../../src/enums/audit-action.enum';
 import { AuditEntityType } from '../../src/enums/audit-entity-type.enum';
 import { ChannelType } from '../../src/enums/channel-type.enum';
+import { ClearanceTrackerStatus } from '../../src/enums/clearance-tracker-status.enum';
 import { Day30PerformanceFlag } from '../../src/enums/day-30-performance-flag.enum';
 import { Day30Verdict } from '../../src/enums/day-30-verdict.enum';
+import { EolMilestoneStatus } from '../../src/enums/eol-milestone-status.enum';
 import { FeedbackSeverity } from '../../src/enums/feedback-severity.enum';
 import { FeedbackSource } from '../../src/enums/feedback-source.enum';
 import { GateDecisionOutcome } from '../../src/enums/gate-decision-outcome.enum';
@@ -20,7 +22,9 @@ import type { AuditLogRecord } from '../../src/modules/audit-logs/types/audit-lo
 import type { BusinessCaseRecord } from '../../src/modules/business-cases/types/business-case-record.type';
 import type { ChannelListingPlanRecord } from '../../src/modules/channel-listing-plans/types/channel-listing-plan-record.type';
 import type { ChannelPricingRecord } from '../../src/modules/channel-pricing/types/channel-pricing-record.type';
+import type { ClearancePlanRecord } from '../../src/modules/clearance-plans/types/clearance-plan-record.type';
 import type { Day30ReviewRecord } from '../../src/modules/day-30-reviews/types/day-30-review-record.type';
+import type { EolExecutionPlanRecord } from '../../src/modules/eol-execution-plans/types/eol-execution-plan-record.type';
 import type { GateDecisionRecord } from '../../src/modules/gate-decisions/types/gate-decision-record.type';
 import type { GtmPlanRecord } from '../../src/modules/gtm-plans/types/gtm-plan-record.type';
 import type { LaunchConfirmationRecord } from '../../src/modules/launch-confirmations/types/launch-confirmation-record.type';
@@ -42,9 +46,11 @@ export const testIds = {
   actingAsUser: '00000000-0000-4000-8000-000000000012',
   admin: '00000000-0000-4000-8000-000000000001',
   auditLog: '00000000-0000-4000-8000-000000000010',
+  clearancePlan: '00000000-0000-4000-8000-000000000054',
   clusterManager: '00000000-0000-4000-8000-000000000006',
   commercialOwner: '00000000-0000-4000-8000-000000000003',
   cooApprover: '00000000-0000-4000-8000-000000000019',
+  eolExecutionPlan: '00000000-0000-4000-8000-000000000055',
   financeOwner: '00000000-0000-4000-8000-000000000004',
   gateDecision: '00000000-0000-4000-8000-000000000009',
   gateThreeReview: '00000000-0000-4000-8000-000000000033',
@@ -59,6 +65,84 @@ export const testIds = {
   revampEolRecommendation: '00000000-0000-4000-8000-000000000053',
   sourcingManager: '00000000-0000-4000-8000-000000000022',
 };
+
+export function createEolExecutionPlanRecord(
+  overrides: Partial<EolExecutionPlanRecord> = {},
+): EolExecutionPlanRecord {
+  return {
+    createdAt: new Date('2026-04-27T12:00:00.000Z'),
+    id: testIds.eolExecutionPlan,
+    kdHandoffNotes: 'KD to maintain warranty and spare parts support for 18 months.',
+    milestones: [
+      {
+        dueDate: '2026-08-15',
+        id: '00000000-0000-4000-8000-000000000056',
+        milestoneName: 'Stop new PO creation',
+        notes: 'Notify sourcing and product ops.',
+        ownerRole: 'SPDM_PRODUCT_OPS',
+        status: EolMilestoneStatus.IN_PROGRESS,
+      },
+    ],
+    productId: testIds.product,
+    serviceContinuityPlan: 'Keep service scripts and warranty SOP active.',
+    sparePartsPlan: 'Reserve spare motors and grille assemblies.',
+    stockPositions: [
+      {
+        channelType: ChannelType.MTO,
+        estimatedStockValue: '24000.00',
+        id: '00000000-0000-4000-8000-000000000057',
+        notes: 'Official store stock.',
+        onHandUnits: 120,
+        reservedUnits: 20,
+      },
+    ],
+    summary: 'Execute EOL handoff and stock wind-down.',
+    updatedAt: new Date('2026-04-27T12:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export function createClearancePlanRecord(
+  overrides: Partial<ClearancePlanRecord> = {},
+): ClearancePlanRecord {
+  return {
+    allocations: [
+      {
+        allocatedUnits: 100,
+        channelType: ChannelType.MTO,
+        id: '00000000-0000-4000-8000-000000000058',
+        notes: 'Official store allocation.',
+      },
+    ],
+    createdAt: new Date('2026-04-27T13:00:00.000Z'),
+    executionInstructions: 'Clear official-store inventory first, then release dealer allocation.',
+    id: testIds.clearancePlan,
+    pricingRows: [
+      {
+        channelType: ChannelType.MTO,
+        clearanceRsp: '150.00',
+        floorPrice: '140.00',
+        id: '00000000-0000-4000-8000-000000000059',
+        markdownApproved: false,
+        notes: 'Above floor.',
+        originalRsp: '199.00',
+      },
+    ],
+    productId: testIds.product,
+    summary: 'Clear remaining EOL inventory through controlled markdown.',
+    updatedAt: new Date('2026-04-27T13:00:00.000Z'),
+    weeklyTrackers: [
+      {
+        id: '00000000-0000-4000-8000-000000000060',
+        notes: 'Initial clearance week.',
+        status: ClearanceTrackerStatus.IN_PROGRESS,
+        unitsCleared: 20,
+        weekStartDate: '2026-08-17',
+      },
+    ],
+    ...overrides,
+  };
+}
 
 export function createProductScorecardRecord(
   overrides: Partial<ProductScorecardRecord> = {},

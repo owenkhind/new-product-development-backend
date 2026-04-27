@@ -753,6 +753,90 @@ describe('AuthorizationPolicyService', () => {
     );
   });
 
+  it('allows Stage 6 EOL and clearance owners and rejects invalid access', async () => {
+    const service = new AuthorizationPolicyService(
+      {} as never,
+      {
+        findById: async () =>
+          createProductRecord({
+            currentStage: ProductStage.STAGE_6,
+          }),
+      } as never,
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.commercialOwner,
+          role: UserRole.GM_COMMERCIAL_OWNER,
+        },
+        resource: PolicyResource.EOL_EXECUTION_PLANS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.qaReviewer,
+          role: UserRole.KD_AFTER_SALES,
+        },
+        resource: PolicyResource.EOL_EXECUTION_PLANS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.financeOwner,
+          role: UserRole.FINANCE_MANAGER,
+        },
+        resource: PolicyResource.CLEARANCE_PLANS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.rejects(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.productOwner,
+          role: UserRole.PRODUCT_MANAGER,
+        },
+        resource: PolicyResource.CLEARANCE_PLANS,
+        targetId: product.id,
+      }),
+      ForbiddenException,
+    );
+
+    const wrongStageService = new AuthorizationPolicyService(
+      {} as never,
+      {
+        findById: async () =>
+          createProductRecord({
+            currentStage: ProductStage.STAGE_5,
+          }),
+      } as never,
+    );
+
+    await assert.rejects(
+      wrongStageService.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.commercialOwner,
+          role: UserRole.GM_COMMERCIAL_OWNER,
+        },
+        resource: PolicyResource.EOL_EXECUTION_PLANS,
+        targetId: product.id,
+      }),
+      ForbiddenException,
+    );
+  });
+
   it('allows assigned users to view gate decisions and audit logs', async () => {
     const service = new AuthorizationPolicyService(
       {} as never,

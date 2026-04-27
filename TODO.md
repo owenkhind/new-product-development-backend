@@ -237,7 +237,7 @@ Decision: Stage 5 is Portfolio Review / Lifecycle Decisioning after Day 30 monit
 - [x] Keep scorecards editable only while product is in `STAGE_5`
 - [x] Allow repeated scorecard records but one active revamp/EOL recommendation per product
 - [x] Auto-flag repeated C-class products
-- [ ] Block EOL execution until a Stage 5 EOL recommendation is approved. Decision: enforce in Stage 6 creation rules.
+- [x] Block EOL execution until a Stage 5 EOL recommendation is approved. Decision: enforced in Stage 6 creation rules.
 - [x] Decide whether Stage 5 needs explicit `gate-5` endpoints or review/action endpoints only. Decision: review/action endpoints only.
 
 ---
@@ -248,16 +248,16 @@ Decision: Stage 6 is EOL / Clearance Execution. It should not decide whether to 
 
 ### Template 16 - EOL Execution Plan
 
-- [ ] Create schema and endpoints
-- [ ] Support stock position, milestone plan, and KD handoff
-- [ ] Track milestone status rather than storing only a static blob
+- [x] Create schema and endpoints
+- [x] Support stock position, milestone plan, and KD handoff
+- [x] Track milestone status rather than storing only a static blob
 
 ### Template 17 - Clearance Plan
 
-- [ ] Create schema and endpoints
-- [ ] Support clearance pricing by channel, stock allocation, execution instructions, and weekly tracker
-- [ ] Enforce price floor and markdown approval rules
-- [ ] Require approved EOL recommendation before creation
+- [x] Create schema and endpoints
+- [x] Support clearance pricing by channel, stock allocation, execution instructions, and weekly tracker
+- [x] Enforce price floor and markdown approval rules
+- [x] Require approved EOL recommendation before creation
 
 ---
 
@@ -270,7 +270,7 @@ These rules should not be buried in controllers.
 - [ ] Pricing guardrail validation service
 - [ ] Stage transition policy service
 - [x] Product classification policy for A / B / C logic
-- [ ] EOL / clearance policy service
+- [x] EOL / clearance policy service
 - [x] Stage 5 recommendation policy for revamp / EOL / hold outcomes
 
 ---
@@ -289,7 +289,7 @@ These rules should not be buried in controllers.
 ## Database schema and migrations
 
 - [ ] Create base schema for users, products, workflow states, approvals, and audit logs
-- [ ] Create tables for all 17 templates
+- [x] Create tables for all 17 templates
 - [x] Model recurring reports as one-to-many records
 - [x] Add enums for stage, status, channel, approval outcome, and portfolio class
 - [x] Add foreign keys and indexes for hot paths
@@ -305,7 +305,7 @@ These rules should not be buried in controllers.
 - [ ] Test GP floor enforcement
 - [ ] Test ART scoring logic
 - [x] Test approval and audit log creation
-- [ ] Test repeated report creation for Stage 5 scorecards and Stage 6 clearance trackers
+- [x] Test repeated report creation for Stage 5 scorecards and Stage 6 clearance trackers
 - [ ] Add seed data or fixtures for local development
 
 ---
@@ -341,5 +341,5 @@ These rules should not be buried in controllers.
 - [x] 5. Implement Stage 3 Launch Readiness end-to-end
 - [x] 6. Implement Stage 4 Launch Execution end-to-end
 - [x] 7. Implement Stage 5 Portfolio Review / Lifecycle Decisioning end-to-end
-- [ ] 8. Implement Stage 6 EOL / Clearance Execution end-to-end
+- [x] 8. Implement Stage 6 EOL / Clearance Execution end-to-end
 - [ ] 9. Tighten tests, docs, and production readiness
