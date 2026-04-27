@@ -209,36 +209,36 @@ Decision: Stage 5 is Portfolio Review / Lifecycle Decisioning after Day 30 monit
 
 ### Template 13 - 90-Day Product Scorecard
 
-- [ ] Create schema and endpoints
-- [ ] Support repeated 90-day review cycles per product
-- [ ] Capture sell-through, GP, revenue, margin, complaints, and market feedback
-- [ ] Implement A / B / C classification logic
-- [ ] Trigger escalation when product is C-class for 2 consecutive scorecard cycles
-- [ ] Record audit metadata for system-generated escalation flags
+- [x] Create schema and endpoints
+- [x] Support repeated 90-day review cycles per product
+- [x] Capture sell-through, GP, revenue, margin, complaints, and market feedback
+- [x] Implement A / B / C classification logic
+- [x] Trigger escalation when product is C-class for 2 consecutive scorecard cycles
+- [x] Record classification reason and escalation flag metadata
 
 ### Template 14 - Product Classification & Portfolio Update
 
-- [ ] Create portfolio-level schema and endpoints
-- [ ] Support quarterly multi-product reporting
-- [ ] Support portfolio summary and C-class review list
-- [ ] Link portfolio update rows back to product scorecards where available
-- [ ] Support COO quarterly review state
+- [x] Create portfolio-level schema and endpoints
+- [x] Support quarterly multi-product reporting
+- [x] Support portfolio summary and C-class review list
+- [x] Link portfolio update rows back to product scorecards where available
+- [x] Support COO quarterly review state
 
 ### Template 15 - Revamp Brief or EOL Recommendation
 
-- [ ] Create schema and endpoints
-- [ ] Support trigger reasons, root cause analysis, revamp option, EOL option, hold option, and recommendation
-- [ ] Require recommendation outcome: revamp, EOL, or hold
-- [ ] Require GM commercial input before COO decision
-- [ ] Record COO decision and audit log
+- [x] Create schema and endpoints
+- [x] Support trigger reasons, root cause analysis, revamp option, EOL option, hold option, and recommendation
+- [x] Require recommendation outcome: revamp, EOL, or hold
+- [x] Require GM commercial input before COO decision
+- [x] Record COO decision and audit log
 
 ### Stage 5 workflow rules
 
-- [ ] Keep scorecards editable only while product is in `STAGE_5`
-- [ ] Allow repeated scorecard records but one active revamp/EOL recommendation per product
-- [ ] Auto-flag repeated C-class products
-- [ ] Block EOL execution until a Stage 5 EOL recommendation is approved
-- [ ] Decide whether Stage 5 needs explicit `gate-5` endpoints or review/action endpoints only
+- [x] Keep scorecards editable only while product is in `STAGE_5`
+- [x] Allow repeated scorecard records but one active revamp/EOL recommendation per product
+- [x] Auto-flag repeated C-class products
+- [ ] Block EOL execution until a Stage 5 EOL recommendation is approved. Decision: enforce in Stage 6 creation rules.
+- [x] Decide whether Stage 5 needs explicit `gate-5` endpoints or review/action endpoints only. Decision: review/action endpoints only.
 
 ---
 
@@ -269,9 +269,9 @@ These rules should not be buried in controllers.
 - [ ] GP calculation service for pricing and review templates
 - [ ] Pricing guardrail validation service
 - [ ] Stage transition policy service
-- [ ] Product classification policy for A / B / C logic
+- [x] Product classification policy for A / B / C logic
 - [ ] EOL / clearance policy service
-- [ ] Stage 5 recommendation policy for revamp / EOL / hold outcomes
+- [x] Stage 5 recommendation policy for revamp / EOL / hold outcomes
 
 ---
 
@@ -290,9 +290,9 @@ These rules should not be buried in controllers.
 
 - [ ] Create base schema for users, products, workflow states, approvals, and audit logs
 - [ ] Create tables for all 17 templates
-- [ ] Model recurring reports as one-to-many records
-- [ ] Add enums for stage, status, channel, approval outcome, and portfolio class
-- [ ] Add foreign keys and indexes for hot paths
+- [x] Model recurring reports as one-to-many records
+- [x] Add enums for stage, status, channel, approval outcome, and portfolio class
+- [x] Add foreign keys and indexes for hot paths
 - [ ] Add migration strategy for future template evolution and versioning
 
 ---
@@ -304,7 +304,7 @@ These rules should not be buried in controllers.
 - [ ] Test invalid workflow transitions
 - [ ] Test GP floor enforcement
 - [ ] Test ART scoring logic
-- [ ] Test approval and audit log creation
+- [x] Test approval and audit log creation
 - [ ] Test repeated report creation for Stage 5 scorecards and Stage 6 clearance trackers
 - [ ] Add seed data or fixtures for local development
 
@@ -325,7 +325,7 @@ These rules should not be buried in controllers.
 - [x] What exactly is Stage 3 in this workflow? Decision: Launch Readiness.
 - [ ] What is the correct passing threshold for Template 1 ART score?
 - [ ] Are submitted templates editable, versioned, or locked?
-- [ ] Are digital signatures required, or are approval actions enough?
+- [ ] Are digital signatures required, or are approval actions enough? Decision: Approval actions are enough.
 - [ ] Are file uploads required for evidence, certifications, or attachments?
 - [ ] What are the exact permission rules for each role?
 - [ ] Should the system support notifications, reminders, or dashboards in the first release?
@@ -340,6 +340,6 @@ These rules should not be buried in controllers.
 - [x] 4. Implement Stage 2 end-to-end
 - [x] 5. Implement Stage 3 Launch Readiness end-to-end
 - [x] 6. Implement Stage 4 Launch Execution end-to-end
-- [ ] 7. Implement Stage 5 Portfolio Review / Lifecycle Decisioning end-to-end
+- [x] 7. Implement Stage 5 Portfolio Review / Lifecycle Decisioning end-to-end
 - [ ] 8. Implement Stage 6 EOL / Clearance Execution end-to-end
 - [ ] 9. Tighten tests, docs, and production readiness

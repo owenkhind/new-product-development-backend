@@ -10,8 +10,11 @@ import { GtmOwnerRole } from '../../src/enums/gtm-owner-role.enum';
 import { LaunchIssueStatus } from '../../src/enums/launch-issue-status.enum';
 import { ProductBrand } from '../../src/enums/product-brand.enum';
 import { ProductCategory } from '../../src/enums/product-category.enum';
+import { ProductScorecardClass } from '../../src/enums/product-scorecard-class.enum';
 import { ProductStage } from '../../src/enums/product-stage.enum';
 import { ProductStatus } from '../../src/enums/product-status.enum';
+import { PortfolioReviewStatus } from '../../src/enums/portfolio-review-status.enum';
+import { RevampEolRecommendationOutcome } from '../../src/enums/revamp-eol-recommendation-outcome.enum';
 import { UserRole } from '../../src/enums/user-role.enum';
 import type { AuditLogRecord } from '../../src/modules/audit-logs/types/audit-log-record.type';
 import type { BusinessCaseRecord } from '../../src/modules/business-cases/types/business-case-record.type';
@@ -25,6 +28,9 @@ import type { CompetitorMatrixRecord } from '../../src/modules/competitor-matric
 import type { MarketSizingRecord } from '../../src/modules/market-sizing/types/market-sizing-record.type';
 import type { OpportunityBriefRecord } from '../../src/modules/opportunity-briefs/types/opportunity-brief-record.type';
 import type { ProductRecord } from '../../src/modules/products/types/product-record.type';
+import type { ProductScorecardRecord } from '../../src/modules/product-scorecards/types/product-scorecard-record.type';
+import type { PortfolioUpdateRecord } from '../../src/modules/portfolio-updates/types/portfolio-update-record.type';
+import type { RevampEolRecommendationRecord } from '../../src/modules/revamp-eol-recommendations/types/revamp-eol-recommendation-record.type';
 import type { SupplierEvaluationRecord } from '../../src/modules/supplier-evaluations/types/supplier-evaluation-record.type';
 import type { SellInReportRecord } from '../../src/modules/sell-in-reports/types/sell-in-report-record.type';
 import type { UserRecord } from '../../src/modules/users/types/user-record.type';
@@ -46,10 +52,85 @@ export const testIds = {
   headOfProduct: '00000000-0000-4000-8000-000000000002',
   marketingOwner: '00000000-0000-4000-8000-000000000005',
   product: '00000000-0000-4000-8000-000000000008',
+  productScorecard: '00000000-0000-4000-8000-000000000051',
   productOwner: '00000000-0000-4000-8000-000000000007',
+  portfolioUpdate: '00000000-0000-4000-8000-000000000052',
   qaReviewer: '00000000-0000-4000-8000-000000000021',
+  revampEolRecommendation: '00000000-0000-4000-8000-000000000053',
   sourcingManager: '00000000-0000-4000-8000-000000000022',
 };
+
+export function createProductScorecardRecord(
+  overrides: Partial<ProductScorecardRecord> = {},
+): ProductScorecardRecord {
+  return {
+    classification: ProductScorecardClass.A,
+    classificationReason: 'Sell-through is at least 80%, GP is at least 25%, and complaints are low.',
+    complaintCount: 2,
+    createdAt: new Date('2026-04-27T08:00:00.000Z'),
+    grossProfitPercent: '28.50',
+    id: testIds.productScorecard,
+    isEscalationRequired: false,
+    margin: '40000.00',
+    marketFeedbackSummary: 'Strong early customer response and healthy channel support.',
+    notes: 'Continue standard monitoring.',
+    productId: testIds.product,
+    revenue: '150000.00',
+    reviewDate: '2026-07-15',
+    sellThroughPercent: '85.00',
+    updatedAt: new Date('2026-04-27T08:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export function createPortfolioUpdateRecord(
+  overrides: Partial<PortfolioUpdateRecord> = {},
+): PortfolioUpdateRecord {
+  return {
+    cooReviewStatus: PortfolioReviewStatus.DRAFT,
+    createdAt: new Date('2026-04-27T09:00:00.000Z'),
+    id: testIds.portfolioUpdate,
+    reviewQuarter: '2026-Q3',
+    rows: [
+      {
+        actionRecommendation: 'Keep product in growth portfolio.',
+        classification: ProductScorecardClass.A,
+        notes: 'Launch traction is strong.',
+        productId: testIds.product,
+        scorecardId: testIds.productScorecard,
+      },
+    ],
+    summary: 'Quarterly portfolio review shows one A-class launch.',
+    updatedAt: new Date('2026-04-27T09:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export function createRevampEolRecommendationRecord(
+  overrides: Partial<RevampEolRecommendationRecord> = {},
+): RevampEolRecommendationRecord {
+  return {
+    cooDecision: null,
+    cooDecisionAt: null,
+    cooDecisionByUserId: null,
+    cooDecisionComment: null,
+    createdAt: new Date('2026-04-27T10:00:00.000Z'),
+    eolOption: 'Retire SKU after current inventory sell-through.',
+    gmCommercialInput: null,
+    gmInputAt: null,
+    gmInputByUserId: null,
+    holdOption: null,
+    id: testIds.revampEolRecommendation,
+    productId: testIds.product,
+    recommendationOutcome: RevampEolRecommendationOutcome.EOL,
+    recommendationSummary: 'Recommend EOL due to repeated C-class scorecards.',
+    revampOption: null,
+    rootCauseAnalysis: 'Weak sell-through and low GP despite launch optimization.',
+    triggerReasons: ['Two consecutive C-class reviews'],
+    updatedAt: new Date('2026-04-27T10:00:00.000Z'),
+    ...overrides,
+  };
+}
 
 export function createLaunchConfirmationRecord(
   overrides: Partial<LaunchConfirmationRecord> = {},

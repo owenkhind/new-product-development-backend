@@ -16,7 +16,10 @@ import { HealthModule } from './modules/health/health.module';
 import { LaunchConfirmationsModule } from './modules/launch-confirmations/launch-confirmations.module';
 import { MarketSizingModule } from './modules/market-sizing/market-sizing.module';
 import { OpportunityBriefsModule } from './modules/opportunity-briefs/opportunity-briefs.module';
+import { PortfolioUpdatesModule } from './modules/portfolio-updates/portfolio-updates.module';
+import { ProductScorecardsModule } from './modules/product-scorecards/product-scorecards.module';
 import { ProductsModule } from './modules/products/products.module';
+import { RevampEolRecommendationsModule } from './modules/revamp-eol-recommendations/revamp-eol-recommendations.module';
 import { SupplierEvaluationsModule } from './modules/supplier-evaluations/supplier-evaluations.module';
 import { UsersModule } from './modules/users/users.module';
 import { SellInReportsModule } from './modules/sell-in-reports/sell-in-reports.module';
@@ -43,7 +46,10 @@ import { WorkflowModule } from './modules/workflow/workflow.module';
     LaunchConfirmationsModule,
     MarketSizingModule,
     OpportunityBriefsModule,
+    PortfolioUpdatesModule,
+    ProductScorecardsModule,
     ProductsModule,
+    RevampEolRecommendationsModule,
     SellInReportsModule,
     SupplierEvaluationsModule,
     UsersModule,

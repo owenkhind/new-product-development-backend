@@ -52,6 +52,13 @@ export class AuthorizationPolicyService {
       case PolicyResource.DAY_30_REVIEWS:
         await this.assertStageFourTemplateAccess(input);
         return;
+      case PolicyResource.PRODUCT_SCORECARDS:
+      case PolicyResource.REVAMP_EOL_RECOMMENDATIONS:
+        await this.assertStageFiveTemplateAccess(input);
+        return;
+      case PolicyResource.PORTFOLIO_UPDATES:
+        this.assertPortfolioUpdateAccess(input);
+        return;
       case PolicyResource.GATE_DECISIONS:
       case PolicyResource.AUDIT_LOGS:
         await this.assertProductScopedViewAccess(input);
@@ -399,6 +406,90 @@ export class AuthorizationPolicyService {
     throw this.stageFourActionForbidden(input);
   }
 
+  private async assertStageFiveTemplateAccess(input: AuthorizationInput): Promise<void> {
+    const product = await this.getProductOrThrow(input.targetId);
+
+    if (input.action === StageAction.VIEW) {
+      if (
+        this.hasGlobalProductViewAccess(input.actor.role) ||
+        this.isAssignedProductContributor(input.actor, product) ||
+        input.actor.role === UserRole.KD_AFTER_SALES ||
+        input.actor.role === UserRole.SPDM_PRODUCT_OPS
+      ) {
+        return;
+      }
+
+      throw this.productActionForbidden(input.action, input.actor.role);
+    }
+
+    if (product.currentStage !== 'STAGE_5') {
+      throw new ForbiddenException({
+        code: 'STAGE_FIVE_TEMPLATE_STAGE_INVALID',
+        message: 'Stage 5 templates can only be edited while the product is in Stage 5.',
+      });
+    }
+
+    switch (input.resource) {
+      case PolicyResource.PRODUCT_SCORECARDS:
+        if (
+          input.action === StageAction.EDIT &&
+          (input.actor.role === UserRole.PRODUCT_MANAGER ||
+            this.isAssignedFinanceOwner(input.actor, product)) &&
+          (product.productOwnerUserId === input.actor.id ||
+            product.financeOwnerUserId === input.actor.id)
+        ) {
+          return;
+        }
+
+        break;
+      case PolicyResource.REVAMP_EOL_RECOMMENDATIONS:
+        if (input.action === StageAction.EDIT && product.productOwnerUserId === input.actor.id) {
+          return;
+        }
+
+        if (input.action === StageAction.CONFIRM && this.isAssignedCommercialOwner(input.actor, product)) {
+          return;
+        }
+
+        if (input.action === StageAction.APPROVE && input.actor.role === UserRole.COO_EXECUTIVE_APPROVER) {
+          return;
+        }
+
+        break;
+      default:
+        break;
+    }
+
+    throw this.stageFiveActionForbidden(input);
+  }
+
+  private assertPortfolioUpdateAccess(input: AuthorizationInput): void {
+    if (
+      input.action === StageAction.VIEW &&
+      [
+        UserRole.PRODUCT_MANAGER,
+        UserRole.HEAD_OF_PRODUCT,
+        UserRole.FINANCE_MANAGER,
+        UserRole.GM_COMMERCIAL_OWNER,
+        UserRole.COO_EXECUTIVE_APPROVER,
+      ].includes(input.actor.role)
+    ) {
+      return;
+    }
+
+    if (
+      [StageAction.CREATE, StageAction.EDIT].includes(input.action) &&
+      [UserRole.FINANCE_MANAGER, UserRole.COO_EXECUTIVE_APPROVER].includes(input.actor.role)
+    ) {
+      return;
+    }
+
+    throw new ForbiddenException({
+      code: 'PORTFOLIO_UPDATE_ACTION_FORBIDDEN',
+      message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} portfolio updates.`,
+    });
+  }
+
   private async getProductOrThrow(productId?: string): Promise<ProductRecord> {
     if (!productId) {
       throw new ForbiddenException({
@@ -508,6 +599,13 @@ export class AuthorizationPolicyService {
   private stageFourActionForbidden(input: AuthorizationInput): ForbiddenException {
     return new ForbiddenException({
       code: 'STAGE_FOUR_TEMPLATE_ACTION_FORBIDDEN',
+      message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} ${input.resource.toLowerCase()}.`,
+    });
+  }
+
+  private stageFiveActionForbidden(input: AuthorizationInput): ForbiddenException {
+    return new ForbiddenException({
+      code: 'STAGE_FIVE_TEMPLATE_ACTION_FORBIDDEN',
       message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} ${input.resource.toLowerCase()}.`,
     });
   }

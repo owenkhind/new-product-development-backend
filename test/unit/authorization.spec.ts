@@ -609,6 +609,150 @@ describe('AuthorizationPolicyService', () => {
     );
   });
 
+  it('allows Stage 5 scorecard, recommendation, and portfolio actors', async () => {
+    const service = new AuthorizationPolicyService(
+      {} as never,
+      {
+        findById: async () =>
+          createProductRecord({
+            currentStage: ProductStage.STAGE_5,
+          }),
+      } as never,
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.productOwner,
+          role: UserRole.PRODUCT_MANAGER,
+        },
+        resource: PolicyResource.PRODUCT_SCORECARDS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.financeOwner,
+          role: UserRole.FINANCE_MANAGER,
+        },
+        resource: PolicyResource.PRODUCT_SCORECARDS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.CONFIRM,
+        actor: {
+          id: testIds.commercialOwner,
+          role: UserRole.GM_COMMERCIAL_OWNER,
+        },
+        resource: PolicyResource.REVAMP_EOL_RECOMMENDATIONS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.APPROVE,
+        actor: {
+          id: testIds.cooApprover,
+          role: UserRole.COO_EXECUTIVE_APPROVER,
+        },
+        resource: PolicyResource.REVAMP_EOL_RECOMMENDATIONS,
+        targetId: product.id,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.CREATE,
+        actor: {
+          id: testIds.financeOwner,
+          role: UserRole.FINANCE_MANAGER,
+        },
+        resource: PolicyResource.PORTFOLIO_UPDATES,
+      }),
+    );
+  });
+
+  it('rejects wrong-role and wrong-stage Stage 5 access', async () => {
+    const stageFiveService = new AuthorizationPolicyService(
+      {} as never,
+      {
+        findById: async () =>
+          createProductRecord({
+            currentStage: ProductStage.STAGE_5,
+          }),
+      } as never,
+    );
+
+    await assert.rejects(
+      stageFiveService.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.clusterManager,
+          role: UserRole.CLUSTER_MANAGER,
+        },
+        resource: PolicyResource.PRODUCT_SCORECARDS,
+        targetId: product.id,
+      }),
+      ForbiddenException,
+    );
+
+    await assert.rejects(
+      stageFiveService.assertAuthorized({
+        action: StageAction.APPROVE,
+        actor: {
+          id: testIds.commercialOwner,
+          role: UserRole.GM_COMMERCIAL_OWNER,
+        },
+        resource: PolicyResource.REVAMP_EOL_RECOMMENDATIONS,
+        targetId: product.id,
+      }),
+      ForbiddenException,
+    );
+
+    await assert.rejects(
+      stageFiveService.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.productOwner,
+          role: UserRole.PRODUCT_MANAGER,
+        },
+        resource: PolicyResource.PORTFOLIO_UPDATES,
+      }),
+      ForbiddenException,
+    );
+
+    const wrongStageService = new AuthorizationPolicyService(
+      {} as never,
+      {
+        findById: async () =>
+          createProductRecord({
+            currentStage: ProductStage.STAGE_4,
+          }),
+      } as never,
+    );
+
+    await assert.rejects(
+      wrongStageService.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.productOwner,
+          role: UserRole.PRODUCT_MANAGER,
+        },
+        resource: PolicyResource.REVAMP_EOL_RECOMMENDATIONS,
+        targetId: product.id,
+      }),
+      ForbiddenException,
+    );
+  });
+
   it('allows assigned users to view gate decisions and audit logs', async () => {
     const service = new AuthorizationPolicyService(
       {} as never,
