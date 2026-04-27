@@ -20,12 +20,12 @@ The product lifecycle runs through a stage-gate process with 17 templates:
   - T8 GTM Plan
   - output: Gate 3 decision
 - Stage 4
-  - reserved for the next post-readiness stage after Gate 3 approval
-- Stage 5
   - T9 Launch Confirmation & Live Listing
   - T10 Sell-In Report
   - T11 Weekly Feedback Log
   - T12 Day 30 Review Report + Action Plan
+- Stage 5
+  - reserved for the next post-launch lifecycle stage after Day 30 review
 - Stage 6
   - T13 90-Day Product Scorecard
   - T14 Product Classification & Portfolio Update
@@ -205,7 +205,7 @@ When the backend is being built from scratch, prefer this order:
    - T4, T5, Gate 2
 4. Stage 3
    - T6, T7, T8, Gate 3
-5. Stage 5
+5. Stage 4
    - T9, T10, T11, T12
 6. Stage 6
    - T13, T14, T15, T16, T17

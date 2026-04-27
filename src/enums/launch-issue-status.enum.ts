@@ -1,0 +1,6 @@
+export enum LaunchIssueStatus {
+  BLOCKED = 'BLOCKED',
+  CRITICAL_ISSUE = 'CRITICAL_ISSUE',
+  MINOR_ISSUE = 'MINOR_ISSUE',
+  NO_ISSUE = 'NO_ISSUE',
+}

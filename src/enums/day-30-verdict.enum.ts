@@ -1,0 +1,6 @@
+export enum Day30Verdict {
+  CONTINUE = 'CONTINUE',
+  ESCALATE = 'ESCALATE',
+  HOLD_PO = 'HOLD_PO',
+  OPTIMIZE = 'OPTIMIZE',
+}

@@ -1,8 +1,13 @@
 import { AuditAction } from '../../src/enums/audit-action.enum';
 import { AuditEntityType } from '../../src/enums/audit-entity-type.enum';
 import { ChannelType } from '../../src/enums/channel-type.enum';
+import { Day30PerformanceFlag } from '../../src/enums/day-30-performance-flag.enum';
+import { Day30Verdict } from '../../src/enums/day-30-verdict.enum';
+import { FeedbackSeverity } from '../../src/enums/feedback-severity.enum';
+import { FeedbackSource } from '../../src/enums/feedback-source.enum';
 import { GateDecisionOutcome } from '../../src/enums/gate-decision-outcome.enum';
 import { GtmOwnerRole } from '../../src/enums/gtm-owner-role.enum';
+import { LaunchIssueStatus } from '../../src/enums/launch-issue-status.enum';
 import { ProductBrand } from '../../src/enums/product-brand.enum';
 import { ProductCategory } from '../../src/enums/product-category.enum';
 import { ProductStage } from '../../src/enums/product-stage.enum';
@@ -12,14 +17,18 @@ import type { AuditLogRecord } from '../../src/modules/audit-logs/types/audit-lo
 import type { BusinessCaseRecord } from '../../src/modules/business-cases/types/business-case-record.type';
 import type { ChannelListingPlanRecord } from '../../src/modules/channel-listing-plans/types/channel-listing-plan-record.type';
 import type { ChannelPricingRecord } from '../../src/modules/channel-pricing/types/channel-pricing-record.type';
+import type { Day30ReviewRecord } from '../../src/modules/day-30-reviews/types/day-30-review-record.type';
 import type { GateDecisionRecord } from '../../src/modules/gate-decisions/types/gate-decision-record.type';
 import type { GtmPlanRecord } from '../../src/modules/gtm-plans/types/gtm-plan-record.type';
+import type { LaunchConfirmationRecord } from '../../src/modules/launch-confirmations/types/launch-confirmation-record.type';
 import type { CompetitorMatrixRecord } from '../../src/modules/competitor-matrices/types/competitor-matrix-record.type';
 import type { MarketSizingRecord } from '../../src/modules/market-sizing/types/market-sizing-record.type';
 import type { OpportunityBriefRecord } from '../../src/modules/opportunity-briefs/types/opportunity-brief-record.type';
 import type { ProductRecord } from '../../src/modules/products/types/product-record.type';
 import type { SupplierEvaluationRecord } from '../../src/modules/supplier-evaluations/types/supplier-evaluation-record.type';
+import type { SellInReportRecord } from '../../src/modules/sell-in-reports/types/sell-in-report-record.type';
 import type { UserRecord } from '../../src/modules/users/types/user-record.type';
+import type { WeeklyFeedbackLogRecord } from '../../src/modules/weekly-feedback-logs/types/weekly-feedback-log-record.type';
 import type { GateTwoReviewRecord } from '../../src/modules/workflow/types/gate-two-review-record.type';
 import type { GateThreeReviewRecord } from '../../src/modules/workflow/types/gate-three-review-record.type';
 
@@ -41,6 +50,145 @@ export const testIds = {
   qaReviewer: '00000000-0000-4000-8000-000000000021',
   sourcingManager: '00000000-0000-4000-8000-000000000022',
 };
+
+export function createLaunchConfirmationRecord(
+  overrides: Partial<LaunchConfirmationRecord> = {},
+): LaunchConfirmationRecord {
+  return {
+    channels: [
+      {
+        accountName: 'Shopee Official Store',
+        channelType: ChannelType.MTO,
+        goLiveAt: '2026-05-15T09:00:00.000Z',
+        id: '00000000-0000-4000-8000-000000000039',
+        isLive: true,
+        issueStatus: LaunchIssueStatus.NO_ISSUE,
+        issueSummary: null,
+        listingUrl: 'https://shopee.example.test/product',
+      },
+      {
+        accountName: 'Lazada Flagship',
+        channelType: ChannelType.ITO_RETAILERS,
+        goLiveAt: '2026-05-15T10:00:00.000Z',
+        id: '00000000-0000-4000-8000-000000000040',
+        isLive: true,
+        issueStatus: LaunchIssueStatus.MINOR_ISSUE,
+        issueSummary: 'Banner pending final update.',
+        listingUrl: 'https://lazada.example.test/product',
+      },
+    ],
+    createdAt: new Date('2026-04-27T04:00:00.000Z'),
+    id: '00000000-0000-4000-8000-000000000041',
+    launchDate: '2026-05-15',
+    notes: 'Launch is live across priority channels.',
+    productId: testIds.product,
+    updatedAt: new Date('2026-04-27T04:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export function createSellInReportRecord(
+  overrides: Partial<SellInReportRecord> = {},
+): SellInReportRecord {
+  return {
+    accounts: [
+      {
+        accountName: 'Shopee Official Store',
+        channelType: ChannelType.MTO,
+        declineReason: null,
+        id: '00000000-0000-4000-8000-000000000042',
+        sellInUnits: 120,
+        sellInValue: '24000.00',
+      },
+      {
+        accountName: 'Key Dealer Network',
+        channelType: ChannelType.MM,
+        declineReason: 'Some dealers waiting for display units.',
+        id: '00000000-0000-4000-8000-000000000043',
+        sellInUnits: 80,
+        sellInValue: '14400.00',
+      },
+    ],
+    createdAt: new Date('2026-04-27T05:00:00.000Z'),
+    id: '00000000-0000-4000-8000-000000000044',
+    notes: 'Week one sell-in is progressing.',
+    productId: testIds.product,
+    reportPeriodEnd: '2026-05-21',
+    reportPeriodStart: '2026-05-15',
+    totalSellInUnits: 200,
+    totalSellInValue: '38400.00',
+    updatedAt: new Date('2026-04-27T05:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export function createWeeklyFeedbackLogRecord(
+  overrides: Partial<WeeklyFeedbackLogRecord> = {},
+): WeeklyFeedbackLogRecord {
+  return {
+    createdAt: new Date('2026-04-27T06:00:00.000Z'),
+    id: '00000000-0000-4000-8000-000000000045',
+    items: [
+      {
+        actionOwner: 'Marketing',
+        feedback: 'Hero image performs well.',
+        id: '00000000-0000-4000-8000-000000000046',
+        isResolved: true,
+        notes: 'Keep asset live.',
+        severity: FeedbackSeverity.LOW,
+        source: FeedbackSource.MARKETING,
+      },
+      {
+        actionOwner: 'KD',
+        feedback: 'Two service questions about warranty terms.',
+        id: '00000000-0000-4000-8000-000000000047',
+        isResolved: false,
+        notes: 'FAQ update needed.',
+        severity: FeedbackSeverity.HIGH,
+        source: FeedbackSource.KD_AFTER_SALES,
+      },
+    ],
+    productId: testIds.product,
+    summary: 'Launch week feedback is mostly positive.',
+    updatedAt: new Date('2026-04-27T06:00:00.000Z'),
+    weekStartDate: '2026-05-15',
+    ...overrides,
+  };
+}
+
+export function createDay30ReviewRecord(
+  overrides: Partial<Day30ReviewRecord> = {},
+): Day30ReviewRecord {
+  return {
+    actionPlan: 'Continue launch plan and monitor marketplace conversion.',
+    actualRevenue: '120000.00',
+    actualSellThroughUnits: 620,
+    channelGp: [
+      {
+        actualGpPercent: '27.50',
+        channelType: ChannelType.MTO,
+        id: '00000000-0000-4000-8000-000000000048',
+        notes: 'Above floor.',
+      },
+      {
+        actualGpPercent: '23.00',
+        channelType: ChannelType.ITO_RETAILERS,
+        id: '00000000-0000-4000-8000-000000000049',
+        notes: 'Above retail floor.',
+      },
+    ],
+    createdAt: new Date('2026-04-27T07:00:00.000Z'),
+    flags: [Day30PerformanceFlag.ON_TRACK],
+    id: '00000000-0000-4000-8000-000000000050',
+    productId: testIds.product,
+    reviewSummary: 'Day 30 launch performance is on track.',
+    targetRevenue: '100000.00',
+    targetSellThroughUnits: 600,
+    updatedAt: new Date('2026-04-27T07:00:00.000Z'),
+    verdict: Day30Verdict.CONTINUE,
+    ...overrides,
+  };
+}
 
 export function createChannelListingPlanRecord(
   overrides: Partial<ChannelListingPlanRecord> = {},

@@ -1,0 +1,6 @@
+export enum FeedbackSource {
+  CUSTOMER = 'CUSTOMER',
+  DEALER = 'DEALER',
+  KD_AFTER_SALES = 'KD_AFTER_SALES',
+  MARKETING = 'MARKETING',
+}

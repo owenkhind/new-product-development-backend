@@ -123,7 +123,7 @@ Default approval authorities:
 - Stage 2 splits into supplier, QA, finance, and commercial sub-checks. Prefer separate status flags instead of one flat boolean.
 - Stage 3 is Launch Readiness and includes channel listing, channel pricing, GTM plan, and Gate 3.
 - Stage 3 blocks should include channel count, e-commerce readiness, GP floors, and unresolved critical checklist items.
-- Stage 5 should produce system flags such as `on_track`, `below_target`, `significantly_below`, `gp_issue`, and `halt_po_required`.
+- Stage 4 should track launch confirmation, sell-in, weekly feedback, and Day 30 performance flags such as `on_track`, `below_target`, `significantly_below`, `gp_issue`, and `halt_po_required`.
 - Stage 6 should support automatic escalation triggers for repeated C-class or repeated GP underperformance.
 
 ## Data model guidance

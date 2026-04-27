@@ -173,31 +173,39 @@ Decision: Stage 3 is Launch Readiness. The source PDF previously labelled these 
 
 ---
 
-## Stage 5 features
+## Stage 4 features
+
+Decision: Stage 4 is Launch Execution / Post-Launch Monitoring after Gate 3 approval.
 
 ### Template 9 - Launch Confirmation & Live Listing
 
-- [ ] Create schema and endpoints
-- [ ] Support Day 1 listing status by channel and issue logging
+- [x] Create schema and endpoints
+- [x] Support Day 1 listing status by channel and issue logging
 
 ### Template 10 - Sell-In Report
 
-- [ ] Create schema and endpoints
-- [ ] Support repeated weekly or period reports per product
-- [ ] Support top accounts and decline reasons
+- [x] Create schema and endpoints
+- [x] Support repeated weekly or period reports per product
+- [x] Support top accounts and decline reasons
 
 ### Template 11 - Weekly Feedback Log
 
-- [ ] Create schema and endpoints
-- [ ] Support recurring feedback entries
-- [ ] Support review summaries, KD complaints, dealer feedback, and escalation flags
+- [x] Create schema and endpoints
+- [x] Support recurring feedback entries
+- [x] Support review summaries, KD complaints, dealer feedback, and escalation flags
 
 ### Template 12 - Day 30 Review
 
-- [ ] Create schema and endpoints
-- [ ] Support KPI vs plan, GP by channel, verdict, and action plan
-- [ ] Enforce GP below floor escalation rule
-- [ ] Model halt-further-PO decision path if GP fails in any channel
+- [x] Create schema and endpoints
+- [x] Support KPI vs plan, GP by channel, verdict, and action plan
+- [x] Enforce GP below floor escalation rule
+- [x] Model halt-further-PO decision path if GP fails in any channel
+
+---
+
+## Stage 5 features
+
+Decision: Stage 5 is reserved for the next lifecycle step after Day 30 review. The likely next slice is 90-day scorecards and portfolio classification, but this should be confirmed before implementation.
 
 ---
 
