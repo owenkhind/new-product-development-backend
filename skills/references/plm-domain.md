@@ -25,11 +25,10 @@ The product lifecycle runs through a stage-gate process with 17 templates:
   - T11 Weekly Feedback Log
   - T12 Day 30 Review Report + Action Plan
 - Stage 5
-  - reserved for the next post-launch lifecycle stage after Day 30 review
-- Stage 6
   - T13 90-Day Product Scorecard
   - T14 Product Classification & Portfolio Update
   - T15 Revamp Brief or EOL Recommendation
+- Stage 6
   - T16 EOL Execution Plan
   - T17 Clearance Plan
 
@@ -144,6 +143,7 @@ Use explicit rules rather than burying these in comments:
 
 ### Day 30 and later actions
 - If GP falls below floor in any channel during Day 30 review, further purchase orders should be halted and escalated for review.
+- T13 can trigger portfolio escalation when the product is C-class for 2 consecutive 90-day scorecard cycles.
 - T15 should distinguish between revamp, EOL, and hold decisions.
 - T16 and T17 are execution workflows with milestone tracking, not just static forms.
 
@@ -207,8 +207,10 @@ When the backend is being built from scratch, prefer this order:
    - T6, T7, T8, Gate 3
 5. Stage 4
    - T9, T10, T11, T12
-6. Stage 6
-   - T13, T14, T15, T16, T17
+6. Stage 5
+   - T13, T14, T15
+7. Stage 6
+   - T16, T17
 
 This keeps the workflow usable early and avoids overbuilding late-stage modules before the foundation is stable.
 

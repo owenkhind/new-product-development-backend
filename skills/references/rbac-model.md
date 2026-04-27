@@ -113,9 +113,11 @@ Default approval authorities:
 - Gate 3
   - Product, Cluster, Finance, and Marketing prepare readiness
   - GM and COO approve launch readiness
-- Stage 5 escalations
-  - COO handles major escalations
-- Stage 6 quarterly, EOL, and clearance decisions
+- Stage 5 portfolio, revamp, and EOL recommendation decisions
+  - Product and Finance prepare scorecards and classification
+  - GM contributes commercial input
+  - COO handles quarterly review, repeated C-class escalation, and revamp/EOL recommendations
+- Stage 6 EOL and clearance execution
   - COO is the main authority
 
 ## Stage-specific behavior notes
@@ -124,7 +126,8 @@ Default approval authorities:
 - Stage 3 is Launch Readiness and includes channel listing, channel pricing, GTM plan, and Gate 3.
 - Stage 3 blocks should include channel count, e-commerce readiness, GP floors, and unresolved critical checklist items.
 - Stage 4 should track launch confirmation, sell-in, weekly feedback, and Day 30 performance flags such as `on_track`, `below_target`, `significantly_below`, `gp_issue`, and `halt_po_required`.
-- Stage 6 should support automatic escalation triggers for repeated C-class or repeated GP underperformance.
+- Stage 5 should support automatic escalation triggers for repeated C-class or repeated GP underperformance.
+- Stage 6 should support execution milestones, stock exposure, KD handoff, SKU inactivation, and clearance price guardrails.
 
 ## Data model guidance
 For the first user slice, start with a simple `users` table containing:

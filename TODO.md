@@ -11,13 +11,13 @@ For actionable tickets with assignees and delivery dates, prefer GitHub Issues l
 | Area | Status |
 |------|--------|
 | Project planning | Skill and reference docs exist under `skills/` |
-| Application code | Not scaffolded yet |
-| API routes | Not implemented yet |
-| Database schema | Not implemented yet |
-| Tests | Not implemented yet |
+| Application code | NestJS backend scaffold and modules exist |
+| API routes | Stages 1-4 and core platform routes are implemented |
+| Database schema | Migrations exist for users, products, workflow, stages 1-4, approvals, and audit logs |
+| Tests | Unit and e2e coverage exists for implemented slices |
 | Auth / roles / approvals | Authorization policy, workflow transitions, and approval traceability are scaffolded; SSO is not implemented yet |
 
-This means the project is still at the foundation and backend design stage.
+The backend now has foundation, users, products, stages 1-4, gate decisions, audit logs, and role-plus-assignment authorization. SSO, attachments, comments, dashboards, and late-lifecycle stages remain future work.
 
 ---
 
@@ -205,29 +205,46 @@ Decision: Stage 4 is Launch Execution / Post-Launch Monitoring after Gate 3 appr
 
 ## Stage 5 features
 
-Decision: Stage 5 is reserved for the next lifecycle step after Day 30 review. The likely next slice is 90-day scorecards and portfolio classification, but this should be confirmed before implementation.
-
----
-
-## Stage 6 features
+Decision: Stage 5 is Portfolio Review / Lifecycle Decisioning after Day 30 monitoring. It contains the 90-day scorecard, portfolio classification, and the revamp/EOL recommendation decision. Stage 5 should decide what happens next; Stage 6 should execute EOL/clearance only after that decision exists.
 
 ### Template 13 - 90-Day Product Scorecard
 
 - [ ] Create schema and endpoints
-- [ ] Support repeated review cycles
+- [ ] Support repeated 90-day review cycles per product
+- [ ] Capture sell-through, GP, revenue, margin, complaints, and market feedback
 - [ ] Implement A / B / C classification logic
-- [ ] Trigger escalation when product is C-class for 2 consecutive cycles
+- [ ] Trigger escalation when product is C-class for 2 consecutive scorecard cycles
+- [ ] Record audit metadata for system-generated escalation flags
 
 ### Template 14 - Product Classification & Portfolio Update
 
 - [ ] Create portfolio-level schema and endpoints
 - [ ] Support quarterly multi-product reporting
 - [ ] Support portfolio summary and C-class review list
+- [ ] Link portfolio update rows back to product scorecards where available
+- [ ] Support COO quarterly review state
 
 ### Template 15 - Revamp Brief or EOL Recommendation
 
 - [ ] Create schema and endpoints
-- [ ] Support trigger reasons, root cause analysis, revamp option, EOL option, and recommendation
+- [ ] Support trigger reasons, root cause analysis, revamp option, EOL option, hold option, and recommendation
+- [ ] Require recommendation outcome: revamp, EOL, or hold
+- [ ] Require GM commercial input before COO decision
+- [ ] Record COO decision and audit log
+
+### Stage 5 workflow rules
+
+- [ ] Keep scorecards editable only while product is in `STAGE_5`
+- [ ] Allow repeated scorecard records but one active revamp/EOL recommendation per product
+- [ ] Auto-flag repeated C-class products
+- [ ] Block EOL execution until a Stage 5 EOL recommendation is approved
+- [ ] Decide whether Stage 5 needs explicit `gate-5` endpoints or review/action endpoints only
+
+---
+
+## Stage 6 features
+
+Decision: Stage 6 is EOL / Clearance Execution. It should not decide whether to revamp or EOL; it should execute the approved Stage 5 recommendation.
 
 ### Template 16 - EOL Execution Plan
 
@@ -240,6 +257,7 @@ Decision: Stage 5 is reserved for the next lifecycle step after Day 30 review. T
 - [ ] Create schema and endpoints
 - [ ] Support clearance pricing by channel, stock allocation, execution instructions, and weekly tracker
 - [ ] Enforce price floor and markdown approval rules
+- [ ] Require approved EOL recommendation before creation
 
 ---
 
@@ -253,6 +271,7 @@ These rules should not be buried in controllers.
 - [ ] Stage transition policy service
 - [ ] Product classification policy for A / B / C logic
 - [ ] EOL / clearance policy service
+- [ ] Stage 5 recommendation policy for revamp / EOL / hold outcomes
 
 ---
 
@@ -286,7 +305,7 @@ These rules should not be buried in controllers.
 - [ ] Test GP floor enforcement
 - [ ] Test ART scoring logic
 - [ ] Test approval and audit log creation
-- [ ] Test repeated report creation for Stage 5 and Stage 6 templates
+- [ ] Test repeated report creation for Stage 5 scorecards and Stage 6 clearance trackers
 - [ ] Add seed data or fixtures for local development
 
 ---
@@ -303,7 +322,7 @@ These rules should not be buried in controllers.
 
 ## Open questions to confirm with stakeholders
 
-- [ ] What exactly is Stage 3 in this workflow?
+- [x] What exactly is Stage 3 in this workflow? Decision: Launch Readiness.
 - [ ] What is the correct passing threshold for Template 1 ART score?
 - [ ] Are submitted templates editable, versioned, or locked?
 - [ ] Are digital signatures required, or are approval actions enough?
@@ -315,12 +334,12 @@ These rules should not be buried in controllers.
 
 ## Suggested implementation order
 
-- [ ] 1. Scaffold app, PostgreSQL connection, config, health route
-- [ ] 2. Build users, roles, products, workflow, approvals, and audit logs
-- [ ] 3. Implement Stage 1 end-to-end
-- [ ] 4. Implement Stage 2 end-to-end
-- [ ] 5. Clarify Stage 3
-- [ ] 6. Implement Stage 4 end-to-end
-- [ ] 7. Implement Stage 5 end-to-end
-- [ ] 8. Implement Stage 6 end-to-end
+- [x] 1. Scaffold app, PostgreSQL connection, config, health route
+- [x] 2. Build users, roles, products, workflow, approvals, and audit logs
+- [x] 3. Implement Stage 1 end-to-end
+- [x] 4. Implement Stage 2 end-to-end
+- [x] 5. Implement Stage 3 Launch Readiness end-to-end
+- [x] 6. Implement Stage 4 Launch Execution end-to-end
+- [ ] 7. Implement Stage 5 Portfolio Review / Lifecycle Decisioning end-to-end
+- [ ] 8. Implement Stage 6 EOL / Clearance Execution end-to-end
 - [ ] 9. Tighten tests, docs, and production readiness
