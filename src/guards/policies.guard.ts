@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
+  Optional,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -11,9 +12,13 @@ import type { Request } from 'express';
 
 import { UserRole } from '../enums/user-role.enum';
 import type { AuthenticatedUser } from '../types/authenticated-user.type';
+import { AuthSessionService } from '../modules/auth/services/auth-session.service';
 import { UsersRepository } from '../modules/users/repositories/users.repository';
 import { AuthorizationPolicyService } from '../modules/authorization/services/authorization-policy.service';
-import { AUTHORIZATION_RULE_KEY, type AuthorizationRule } from './authorize.decorator';
+import {
+  AUTHORIZATION_RULE_KEY,
+  type AuthorizationRule,
+} from './authorize.decorator';
 
 @Injectable()
 export class PoliciesGuard implements CanActivate {
@@ -22,13 +27,13 @@ export class PoliciesGuard implements CanActivate {
     private readonly configService: ConfigService,
     private readonly usersRepository: UsersRepository,
     private readonly authorizationPolicyService: AuthorizationPolicyService,
+    @Optional() private readonly authSessionService?: AuthSessionService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const rule = this.reflector.getAllAndOverride<AuthorizationRule | undefined>(
-      AUTHORIZATION_RULE_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const rule = this.reflector.getAllAndOverride<
+      AuthorizationRule | undefined
+    >(AUTHORIZATION_RULE_KEY, [context.getHandler(), context.getClass()]);
 
     if (!rule) {
       return true;
@@ -56,9 +61,33 @@ export class PoliciesGuard implements CanActivate {
     return true;
   }
 
-  private async resolveActor(request: Request): Promise<AuthenticatedUser | null> {
+  private async resolveActor(
+    request: Request,
+  ): Promise<AuthenticatedUser | null> {
     if (request.user) {
       return request.user;
+    }
+
+    const sessionPayload = this.authSessionService?.getSessionFromCookieHeader(
+      request.headers.cookie,
+    );
+
+    if (sessionPayload) {
+      const user = await this.usersRepository.findById(sessionPayload.userId);
+
+      if (!user || !user.isActive) {
+        throw new UnauthorizedException({
+          code: 'INVALID_SESSION_ACTOR',
+          message: 'The current session does not match an active user.',
+        });
+      }
+
+      return {
+        actingAsUserId: null,
+        id: user.id,
+        isAdminSupportOverride: false,
+        role: user.role,
+      };
     }
 
     const environment = this.configService.get<string>('NODE_ENV');
@@ -88,12 +117,15 @@ export class PoliciesGuard implements CanActivate {
       user.role === UserRole.ADMIN && this.parseBooleanHeader(overrideHeader);
 
     const actingAsHeader = request.headers['x-dev-acting-as-user-id'];
-    const actingAsUserId = Array.isArray(actingAsHeader) ? actingAsHeader[0] : actingAsHeader;
+    const actingAsUserId = Array.isArray(actingAsHeader)
+      ? actingAsHeader[0]
+      : actingAsHeader;
 
     if (actingAsUserId && user.role !== UserRole.ADMIN) {
       throw new ForbiddenException({
         code: 'ADMIN_OVERRIDE_REQUIRED',
-        message: 'Only admins can impersonate another user in development mode.',
+        message:
+          'Only admins can impersonate another user in development mode.',
       });
     }
 
@@ -111,11 +143,15 @@ export class PoliciesGuard implements CanActivate {
     return headerValue === 'true' || headerValue === '1';
   }
 
-  private getTargetId(params: Record<string, string | string[] | undefined>): string | undefined {
+  private getTargetId(
+    params: Record<string, string | string[] | undefined>,
+  ): string | undefined {
     return this.getRouteParam(params.productId ?? params.id);
   }
 
-  private getRouteParam(value: string | string[] | undefined): string | undefined {
+  private getRouteParam(
+    value: string | string[] | undefined,
+  ): string | undefined {
     return Array.isArray(value) ? value[0] : value;
   }
 }

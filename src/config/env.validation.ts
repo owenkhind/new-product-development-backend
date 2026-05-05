@@ -7,7 +7,11 @@ export const envValidationSchema = Joi.object({
   PORT: Joi.number().port().default(3000),
   APP_NAME: Joi.string().default('new-product-development-backend'),
   APP_VERSION: Joi.string().default('0.1.0'),
-  DATABASE_URL: Joi.string().uri({ scheme: ['postgres', 'postgresql'] }).optional(),
+  AUTH_SESSION_SECRET: Joi.string().min(32).optional(),
+  TEMP_AUTH_PASSWORD: Joi.string().min(8).optional(),
+  DATABASE_URL: Joi.string()
+    .uri({ scheme: ['postgres', 'postgresql'] })
+    .optional(),
   DB_HOST: Joi.string().hostname().optional(),
   DB_PORT: Joi.number().port().optional(),
   DB_DATABASE: Joi.string().optional(),
@@ -19,7 +23,8 @@ export const envValidationSchema = Joi.object({
   DB_SCHEMA: Joi.string().default('public'),
   DB_PROMOTER_SCHEMA: Joi.string().optional(),
 }).custom((value, helpers) => {
-  const hasDatabaseUrl = typeof value.DATABASE_URL === 'string' && value.DATABASE_URL.length > 0;
+  const hasDatabaseUrl =
+    typeof value.DATABASE_URL === 'string' && value.DATABASE_URL.length > 0;
   const hasDiscreteConfig =
     typeof value.DB_HOST === 'string' &&
     typeof value.DB_DATABASE === 'string' &&
@@ -30,6 +35,20 @@ export const envValidationSchema = Joi.object({
     return helpers.error('any.custom', {
       message:
         'Provide DATABASE_URL or the DB_HOST, DB_DATABASE, DB_USERNAME, and DB_PASSWORD variables.',
+    });
+  }
+
+  if (value.NODE_ENV === 'production' && !value.AUTH_SESSION_SECRET) {
+    return helpers.error('any.custom', {
+      message:
+        'Provide AUTH_SESSION_SECRET for production authentication sessions.',
+    });
+  }
+
+  if (value.NODE_ENV === 'production' && !value.TEMP_AUTH_PASSWORD) {
+    return helpers.error('any.custom', {
+      message:
+        'Provide TEMP_AUTH_PASSWORD while temporary email/password authentication is enabled.',
     });
   }
 

@@ -1043,6 +1043,59 @@ describe('PoliciesGuard', () => {
     );
   });
 
+  it('hydrates request.user from a signed session cookie in production mode', async () => {
+    const request = {
+      headers: {
+        cookie: 'npd_session=signed-session',
+      },
+      params: {},
+      user: undefined,
+    };
+    const guard = new PoliciesGuard(
+      {
+        getAllAndOverride: () => ({
+          action: StageAction.VIEW,
+          resource: PolicyResource.PRODUCTS,
+        }),
+      } as never,
+      {
+        get: () => 'production',
+      } as never,
+      {
+        findById: async () => ({
+          id: testIds.productOwner,
+          isActive: true,
+          role: UserRole.PRODUCT_MANAGER,
+        }),
+      } as never,
+      {
+        assertAuthorized: async () => undefined,
+      } as never,
+      {
+        getSessionFromCookieHeader: () => ({
+          expiresAt: null,
+          provider: 'EMAIL_PASSWORD',
+          userId: testIds.productOwner,
+        }),
+      } as never,
+    );
+
+    await guard.canActivate({
+      getClass: () => undefined,
+      getHandler: () => undefined,
+      switchToHttp: () => ({
+        getRequest: () => request,
+      }),
+    } as never);
+
+    assert.deepEqual(request.user, {
+      actingAsUserId: null,
+      id: testIds.productOwner,
+      isAdminSupportOverride: false,
+      role: UserRole.PRODUCT_MANAGER,
+    });
+  });
+
   it('rejects invalid dev actors and non-admin impersonation', async () => {
     const invalidActorGuard = new PoliciesGuard(
       {

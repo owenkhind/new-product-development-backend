@@ -8,16 +8,73 @@ For actionable tickets with assignees and delivery dates, prefer GitHub Issues l
 
 ## What exists today
 
-| Area | Status |
-|------|--------|
-| Project planning | Skill and reference docs exist under `skills/` |
-| Application code | NestJS backend scaffold and modules exist |
-| API routes | Stages 1-4 and core platform routes are implemented |
-| Database schema | Migrations exist for users, products, workflow, stages 1-4, approvals, and audit logs |
-| Tests | Unit and e2e coverage exists for implemented slices |
-| Auth / roles / approvals | Authorization policy, workflow transitions, and approval traceability are scaffolded; SSO is not implemented yet |
+| Area                     | Status                                                                                                                                                                                               |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Project planning         | Skill and reference docs exist under `skills/`                                                                                                                                                       |
+| Application code         | NestJS backend scaffold and modules exist                                                                                                                                                            |
+| API routes               | Stages 1-6, all 17 lifecycle templates, core platform routes, workflow transitions, approvals, and audit logs are implemented                                                                        |
+| Database schema          | Migrations exist for users, products, workflow, stages 1-6, all 17 templates, approvals, and audit logs                                                                                              |
+| Tests                    | Unit and e2e coverage exists for implemented slices                                                                                                                                                  |
+| Auth / roles / approvals | Temporary email/password auth, signed session cookies, authorization policy, workflow transitions, role-plus-assignment checks, and approval traceability are scaffolded; SSO is not implemented yet |
+| Production readiness     | Build/test/lint pass and UAT users can be seeded, but CORS, readiness checks, product/stage demo data, deployment runbook, and final business decisions remain deployment blockers                   |
 
-The backend now has foundation, users, products, stages 1-4, gate decisions, audit logs, and role-plus-assignment authorization. SSO, attachments, comments, dashboards, and late-lifecycle stages remain future work.
+The backend now has foundation, temporary email/password auth, users, products, stages 1-6, gate decisions, audit logs, and role-plus-assignment authorization. Microsoft SSO, attachments, comments, dashboard aggregation APIs, seed data, and deployment hardening remain future work.
+
+---
+
+## Deployment Readiness Snapshot - 2026-05-05
+
+Target date under discussion: Monday, 2026-05-11. Current recommendation: treat Monday as staging/UAT unless authentication is deliberately scoped to a temporary internal login or seeded test users.
+
+| Area                    | Readiness for UAT | Critical assessment                                                                                                                                                                                      |
+| ----------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build quality           | High              | `lint`, `build`, unit tests, and e2e tests pass locally.                                                                                                                                                 |
+| Core workflow coverage  | High              | Users, products, stages 1-6, T1-T17 templates, gate flows, approvals, audit logs, and authorization policy are implemented.                                                                              |
+| Production auth         | Medium            | Temporary email/password auth can populate `request.user` through signed session cookies; Microsoft SSO is deferred and must not be represented as ready.                                                |
+| Database readiness      | Medium            | SQL migrations and a UAT user seed command exist, but there is no migration runner script, product/stage seed command, rollback runbook, or verified staging database rehearsal documented in this TODO. |
+| API contract stability  | Medium            | DTOs and response objects exist, but frontend integration will likely expose contract gaps around draft-save/submit/edit/version behavior.                                                               |
+| Observability           | Medium-low        | Request IDs, common error shape, audit logs, and a logging interceptor exist; metrics, structured JSON logs, DB health, and tracing are not production-grade.                                            |
+| Health checks           | Medium-low        | `/v1/health` returns service metadata only; deployment readiness should include DB/dependency health.                                                                                                    |
+| Security hardening      | Medium-low        | Validation and authorization exist, but production auth, CORS, rate limiting, secure headers, and secret/runbook handling still need release decisions.                                                  |
+| Business-rule certainty | Medium-low        | Several important policy questions remain unresolved: ART threshold, submitted template editability, exact permissions, attachments, and notifications.                                                  |
+
+Deployment conclusion: the backend is solid for core workflow UAT, but not production-ready until authentication, release environment behavior, readiness checks, seed data, and unresolved business rules are handled.
+
+---
+
+## Deployment-Critical Backlog
+
+### P0 - Blocks Honest Monday UAT / Production
+
+- [ ] Decide release mode for 2026-05-11: staging/UAT demo, controlled pilot, or real production.
+- [x] Decide and implement the Monday auth path: temporary email/password auth using active backend users and an env-backed password.
+- [x] Add a production authentication strategy that separates authentication from authorization and populates `request.user` before `PoliciesGuard` runs.
+- [ ] Define the backend session/user payload consumed by the frontend: user id, role, active state, assignments, impersonation/admin override flags, and expiry behavior.
+- [ ] Configure production-safe CORS for the frontend domain and staging domain.
+- [ ] Add liveness/readiness/dependency health endpoints or expand `/v1/health` to verify database connectivity for readiness.
+- [x] Add real local/staging UAT users and `seed:uat-users` command for temporary email/password sign-in.
+- [ ] Add product, stage example, and approval-path seed data for local/staging UAT.
+- [ ] Document the migration deployment command, migration order, rollback expectation, and staging database rehearsal steps.
+- [ ] Align API contracts with the frontend for product list/detail and the first end-to-end product registration path.
+- [ ] Decide whether Monday requires real template submit/lock behavior or draft create/read/update only.
+
+### P1 - Needed Soon After P0
+
+- [ ] Add dashboard aggregation endpoints if frontend dashboards must stop using mock data.
+- [ ] Add comments/notes support if reviewers need threaded discussion inside approval flows.
+- [ ] Add attachments/evidence support if certifications, supplier files, or gate evidence must be uploaded.
+- [ ] Add below-floor pricing exception approval flow for Template 7.
+- [ ] Extract ART scoring, GP calculation, pricing guardrails, and stage transition policy into explicit tested domain services where still embedded in feature services.
+- [ ] Add OpenAPI/Swagger or generated contract documentation once draft-save/submit contracts stabilize.
+- [ ] Add structured JSON logging, metrics, DB latency tracking, and production error dashboards.
+- [ ] Add real PostgreSQL integration tests for repository queries, transactions, migrations, and concurrency-sensitive workflow transitions.
+
+### P2 - Product Polish / Later Hardening
+
+- [ ] Add notification/reminder jobs only after first-release notification requirements are confirmed.
+- [ ] Add idempotency keys for retry-prone write endpoints if the frontend or integrations may retry submissions.
+- [ ] Add optimistic or pessimistic concurrency protection for template updates if multiple users can edit the same record.
+- [ ] Add export/reporting endpoints for gate packs only if stakeholders require offline review documents.
 
 ---
 
@@ -288,7 +345,7 @@ These rules should not be buried in controllers.
 
 ## Database schema and migrations
 
-- [ ] Create base schema for users, products, workflow states, approvals, and audit logs
+- [x] Create base schema for users, products, workflow states, approvals, and audit logs
 - [x] Create tables for all 17 templates
 - [x] Model recurring reports as one-to-many records
 - [x] Add enums for stage, status, channel, approval outcome, and portfolio class
@@ -303,10 +360,11 @@ These rules should not be buried in controllers.
 - [x] Add integration-style tests for main API paths
 - [x] Test invalid workflow transitions
 - [x] Test GP floor enforcement
-- [ ] Test ART scoring logic
+- [x] Test ART scoring logic
 - [x] Test approval and audit log creation
 - [x] Test repeated report creation for Stage 5 scorecards and Stage 6 clearance trackers
-- [ ] Add seed data or fixtures for local development
+- [x] Add UAT seed users and seed command for local/staging sign-in
+- [ ] Add product and workflow seed data or fixtures for local development
 
 ---
 
@@ -323,12 +381,32 @@ These rules should not be buried in controllers.
 ## Open questions to confirm with stakeholders
 
 - [x] What exactly is Stage 3 in this workflow? Decision: Launch Readiness.
+- [ ] Who is the first real audience on 2026-05-11: internal demo viewers, UAT testers, pilot users, or production users?
 - [ ] What is the correct passing threshold for Template 1 ART score?
 - [ ] Are submitted templates editable, versioned, or locked?
+- [ ] For Monday, is draft create/read/update enough, or must submit/review/approval be production-authenticated end-to-end?
 - [ ] Are digital signatures required, or are approval actions enough? Decision: Approval actions are enough.
 - [ ] Are file uploads required for evidence, certifications, or attachments?
-- [ ] What are the exact permission rules for each role?
+- [ ] What are the exact permission rules for each role, each template, each gate, and each override path?
+- [ ] What claims will Microsoft SSO provide, and how should they map to internal users, roles, assignments, and inactive users?
+- [x] If Microsoft SSO is not ready by Monday, is a temporary seeded-user or email/password login acceptable for UAT? Decision: use temporary email/password auth first.
+- [ ] Who owns user provisioning and role assignment: IT, Product Admin, seeded data, or an admin screen?
+- [ ] Which environment will host the backend, database, secrets, logs, and backups?
 - [ ] Should the system support notifications, reminders, or dashboards in the first release?
+- [ ] What audit retention, access, and export requirements apply to approvals and admin overrides?
+
+---
+
+## Concerns / Risk Register
+
+- [x] In production mode, protected endpoints reject requests unless a real authentication layer sets `request.user`; this was addressed with temporary signed-cookie email/password auth.
+- [ ] `/v1/health` currently confirms the app process only, not database readiness.
+- [ ] There is no documented migration runner or seed command, so staging setup could become manual and error-prone.
+- [ ] Existing e2e tests wire modules and validation well, but do not prove migrations/repositories against a real PostgreSQL instance.
+- [ ] CORS and secure production HTTP behavior need explicit configuration before the frontend can safely call the backend from another domain.
+- [ ] The frontend is feature-rich but still mock-heavy; backend contracts must be prioritized by the release path, not by the number of screens already designed.
+- [ ] Business-rule ambiguity around ART threshold and submitted-template editability can cause rework in both API and UI if left unresolved.
+- [ ] Dashboard, notification, attachment, and comment expectations can expand scope quickly; these need a first-release decision before Monday.
 
 ---
 
@@ -342,4 +420,4 @@ These rules should not be buried in controllers.
 - [x] 6. Implement Stage 4 Launch Execution end-to-end
 - [x] 7. Implement Stage 5 Portfolio Review / Lifecycle Decisioning end-to-end
 - [x] 8. Implement Stage 6 EOL / Clearance Execution end-to-end
-- [ ] 9. Tighten tests, docs, and production readiness
+- [ ] 9. Tighten tests, docs, auth, frontend contracts, seed data, and production readiness

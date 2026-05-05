@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "nest build",
+    "seed:uat-users": "psql \"$DATABASE_URL\" -f src/database/seeds/20260505_0001_seed_uat_users.sql",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
