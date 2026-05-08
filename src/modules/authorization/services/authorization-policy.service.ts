@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { PolicyResource } from '../../../enums/policy-resource.enum';
 import { StageAction } from '../../../enums/stage-action.enum';
@@ -76,7 +80,10 @@ export class AuthorizationPolicyService {
   }
 
   private assertUsersAccess(input: AuthorizationInput): void {
-    if (input.action === StageAction.VIEW && input.targetId === input.actor.id) {
+    if (
+      input.action === StageAction.VIEW &&
+      input.targetId === input.actor.id
+    ) {
       return;
     }
 
@@ -159,7 +166,9 @@ export class AuthorizationPolicyService {
     });
   }
 
-  private async assertGateWorkflowAccess(input: AuthorizationInput): Promise<void> {
+  private async assertGateWorkflowAccess(
+    input: AuthorizationInput,
+  ): Promise<void> {
     const product = await this.getProductOrThrow(input.targetId);
 
     switch (product.currentStage) {
@@ -172,7 +181,9 @@ export class AuthorizationPolicyService {
         }
 
         if (
-          [StageAction.APPROVE, StageAction.REJECT, StageAction.KILL].includes(input.action) &&
+          [StageAction.APPROVE, StageAction.REJECT, StageAction.KILL].includes(
+            input.action,
+          ) &&
           input.actor.role === UserRole.HEAD_OF_PRODUCT
         ) {
           return;
@@ -196,7 +207,10 @@ export class AuthorizationPolicyService {
 
         if (
           input.action === StageAction.REJECT &&
-          [UserRole.GM_COMMERCIAL_OWNER, UserRole.COO_EXECUTIVE_APPROVER].includes(input.actor.role)
+          [
+            UserRole.GM_COMMERCIAL_OWNER,
+            UserRole.COO_EXECUTIVE_APPROVER,
+          ].includes(input.actor.role)
         ) {
           return;
         }
@@ -226,13 +240,66 @@ export class AuthorizationPolicyService {
 
         if (
           input.action === StageAction.REJECT &&
-          [UserRole.GM_COMMERCIAL_OWNER, UserRole.COO_EXECUTIVE_APPROVER].includes(input.actor.role)
+          [
+            UserRole.GM_COMMERCIAL_OWNER,
+            UserRole.COO_EXECUTIVE_APPROVER,
+          ].includes(input.actor.role)
         ) {
           return;
         }
 
         if (
           input.action === StageAction.KILL &&
+          input.actor.role === UserRole.COO_EXECUTIVE_APPROVER
+        ) {
+          return;
+        }
+
+        break;
+      case 'STAGE_4':
+      case 'STAGE_5':
+        if (
+          input.action === StageAction.SUBMIT &&
+          product.productOwnerUserId === input.actor.id
+        ) {
+          return;
+        }
+
+        if (
+          [StageAction.APPROVE, StageAction.REJECT].includes(input.action) &&
+          [
+            UserRole.GM_COMMERCIAL_OWNER,
+            UserRole.COO_EXECUTIVE_APPROVER,
+          ].includes(input.actor.role)
+        ) {
+          return;
+        }
+
+        if (
+          input.action === StageAction.KILL &&
+          input.actor.role === UserRole.COO_EXECUTIVE_APPROVER
+        ) {
+          return;
+        }
+
+        break;
+      case 'STAGE_6':
+        if (
+          input.action === StageAction.SUBMIT &&
+          [
+            UserRole.PRODUCT_MANAGER,
+            UserRole.KD_AFTER_SALES,
+            UserRole.SPDM_PRODUCT_OPS,
+          ].includes(input.actor.role) &&
+          product.productOwnerUserId === input.actor.id
+        ) {
+          return;
+        }
+
+        if (
+          [StageAction.APPROVE, StageAction.REJECT, StageAction.KILL].includes(
+            input.action,
+          ) &&
           input.actor.role === UserRole.COO_EXECUTIVE_APPROVER
         ) {
           return;
@@ -249,13 +316,16 @@ export class AuthorizationPolicyService {
     });
   }
 
-  private async assertGateTwoReviewAccess(input: AuthorizationInput): Promise<void> {
+  private async assertGateTwoReviewAccess(
+    input: AuthorizationInput,
+  ): Promise<void> {
     const product = await this.getProductOrThrow(input.targetId);
 
     if (product.currentStage !== 'STAGE_2') {
       throw new ForbiddenException({
         code: 'GATE_TWO_REVIEW_STAGE_INVALID',
-        message: 'Gate 2 reviews can only be updated while the product is in Stage 2.',
+        message:
+          'Gate 2 reviews can only be updated while the product is in Stage 2.',
       });
     }
 
@@ -286,13 +356,16 @@ export class AuthorizationPolicyService {
     });
   }
 
-  private async assertGateThreeReviewAccess(input: AuthorizationInput): Promise<void> {
+  private async assertGateThreeReviewAccess(
+    input: AuthorizationInput,
+  ): Promise<void> {
     const product = await this.getProductOrThrow(input.targetId);
 
     if (product.currentStage !== 'STAGE_3') {
       throw new ForbiddenException({
         code: 'GATE_THREE_REVIEW_STAGE_INVALID',
-        message: 'Gate 3 reviews can only be updated while the product is in Stage 3.',
+        message:
+          'Gate 3 reviews can only be updated while the product is in Stage 3.',
       });
     }
 
@@ -326,7 +399,9 @@ export class AuthorizationPolicyService {
     });
   }
 
-  private async assertProductScopedViewAccess(input: AuthorizationInput): Promise<void> {
+  private async assertProductScopedViewAccess(
+    input: AuthorizationInput,
+  ): Promise<void> {
     const product = await this.getProductOrThrow(input.targetId);
 
     if (
@@ -339,7 +414,9 @@ export class AuthorizationPolicyService {
     throw this.productActionForbidden(StageAction.VIEW, input.actor.role);
   }
 
-  private async assertStageFourTemplateAccess(input: AuthorizationInput): Promise<void> {
+  private async assertStageFourTemplateAccess(
+    input: AuthorizationInput,
+  ): Promise<void> {
     const product = await this.getProductOrThrow(input.targetId);
 
     if (input.action === StageAction.VIEW) {
@@ -361,7 +438,8 @@ export class AuthorizationPolicyService {
     if (product.currentStage !== 'STAGE_4') {
       throw new ForbiddenException({
         code: 'STAGE_FOUR_TEMPLATE_STAGE_INVALID',
-        message: 'Stage 4 templates can only be edited while the product is in Stage 4.',
+        message:
+          'Stage 4 templates can only be edited while the product is in Stage 4.',
       });
     }
 
@@ -410,7 +488,9 @@ export class AuthorizationPolicyService {
     throw this.stageFourActionForbidden(input);
   }
 
-  private async assertStageFiveTemplateAccess(input: AuthorizationInput): Promise<void> {
+  private async assertStageFiveTemplateAccess(
+    input: AuthorizationInput,
+  ): Promise<void> {
     const product = await this.getProductOrThrow(input.targetId);
 
     if (input.action === StageAction.VIEW) {
@@ -429,7 +509,8 @@ export class AuthorizationPolicyService {
     if (product.currentStage !== 'STAGE_5') {
       throw new ForbiddenException({
         code: 'STAGE_FIVE_TEMPLATE_STAGE_INVALID',
-        message: 'Stage 5 templates can only be edited while the product is in Stage 5.',
+        message:
+          'Stage 5 templates can only be edited while the product is in Stage 5.',
       });
     }
 
@@ -447,15 +528,24 @@ export class AuthorizationPolicyService {
 
         break;
       case PolicyResource.REVAMP_EOL_RECOMMENDATIONS:
-        if (input.action === StageAction.EDIT && product.productOwnerUserId === input.actor.id) {
+        if (
+          input.action === StageAction.EDIT &&
+          product.productOwnerUserId === input.actor.id
+        ) {
           return;
         }
 
-        if (input.action === StageAction.CONFIRM && this.isAssignedCommercialOwner(input.actor, product)) {
+        if (
+          input.action === StageAction.CONFIRM &&
+          this.isAssignedCommercialOwner(input.actor, product)
+        ) {
           return;
         }
 
-        if (input.action === StageAction.APPROVE && input.actor.role === UserRole.COO_EXECUTIVE_APPROVER) {
+        if (
+          input.action === StageAction.APPROVE &&
+          input.actor.role === UserRole.COO_EXECUTIVE_APPROVER
+        ) {
           return;
         }
 
@@ -483,7 +573,9 @@ export class AuthorizationPolicyService {
 
     if (
       [StageAction.CREATE, StageAction.EDIT].includes(input.action) &&
-      [UserRole.FINANCE_MANAGER, UserRole.COO_EXECUTIVE_APPROVER].includes(input.actor.role)
+      [UserRole.FINANCE_MANAGER, UserRole.COO_EXECUTIVE_APPROVER].includes(
+        input.actor.role,
+      )
     ) {
       return;
     }
@@ -494,7 +586,9 @@ export class AuthorizationPolicyService {
     });
   }
 
-  private async assertStageSixTemplateAccess(input: AuthorizationInput): Promise<void> {
+  private async assertStageSixTemplateAccess(
+    input: AuthorizationInput,
+  ): Promise<void> {
     const product = await this.getProductOrThrow(input.targetId);
 
     if (input.action === StageAction.VIEW) {
@@ -517,7 +611,8 @@ export class AuthorizationPolicyService {
     if (product.currentStage !== 'STAGE_6') {
       throw new ForbiddenException({
         code: 'STAGE_SIX_TEMPLATE_STAGE_INVALID',
-        message: 'Stage 6 templates can only be edited while the product is in Stage 6.',
+        message:
+          'Stage 6 templates can only be edited while the product is in Stage 6.',
       });
     }
 
@@ -585,7 +680,10 @@ export class AuthorizationPolicyService {
     return this.isAssignedProductEditor(actor, product);
   }
 
-  private isAssignedProductEditor(actor: AuthenticatedUser, product: ProductRecord): boolean {
+  private isAssignedProductEditor(
+    actor: AuthenticatedUser,
+    product: ProductRecord,
+  ): boolean {
     switch (actor.role) {
       case UserRole.PRODUCT_MANAGER:
         return product.productOwnerUserId === actor.id;
@@ -602,20 +700,44 @@ export class AuthorizationPolicyService {
     }
   }
 
-  private isAssignedClusterManager(actor: AuthenticatedUser, product: ProductRecord): boolean {
-    return actor.role === UserRole.CLUSTER_MANAGER && product.clusterOwnerUserIds.includes(actor.id);
+  private isAssignedClusterManager(
+    actor: AuthenticatedUser,
+    product: ProductRecord,
+  ): boolean {
+    return (
+      actor.role === UserRole.CLUSTER_MANAGER &&
+      product.clusterOwnerUserIds.includes(actor.id)
+    );
   }
 
-  private isAssignedCommercialOwner(actor: AuthenticatedUser, product: ProductRecord): boolean {
-    return actor.role === UserRole.GM_COMMERCIAL_OWNER && product.commercialOwnerUserId === actor.id;
+  private isAssignedCommercialOwner(
+    actor: AuthenticatedUser,
+    product: ProductRecord,
+  ): boolean {
+    return (
+      actor.role === UserRole.GM_COMMERCIAL_OWNER &&
+      product.commercialOwnerUserId === actor.id
+    );
   }
 
-  private isAssignedFinanceOwner(actor: AuthenticatedUser, product: ProductRecord): boolean {
-    return actor.role === UserRole.FINANCE_MANAGER && product.financeOwnerUserId === actor.id;
+  private isAssignedFinanceOwner(
+    actor: AuthenticatedUser,
+    product: ProductRecord,
+  ): boolean {
+    return (
+      actor.role === UserRole.FINANCE_MANAGER &&
+      product.financeOwnerUserId === actor.id
+    );
   }
 
-  private isAssignedMarketingOwner(actor: AuthenticatedUser, product: ProductRecord): boolean {
-    return actor.role === UserRole.MARKETING_GTM_OWNER && product.marketingOwnerUserId === actor.id;
+  private isAssignedMarketingOwner(
+    actor: AuthenticatedUser,
+    product: ProductRecord,
+  ): boolean {
+    return (
+      actor.role === UserRole.MARKETING_GTM_OWNER &&
+      product.marketingOwnerUserId === actor.id
+    );
   }
 
   private canManageGenericWorkflow(
@@ -642,35 +764,45 @@ export class AuthorizationPolicyService {
       case 'STAGE_6':
         return (
           actor.role === UserRole.COO_EXECUTIVE_APPROVER ||
-          (action === StageAction.REOPEN && actor.role === UserRole.GM_COMMERCIAL_OWNER)
+          (action === StageAction.REOPEN &&
+            actor.role === UserRole.GM_COMMERCIAL_OWNER)
         );
       default:
         return false;
     }
   }
 
-  private productActionForbidden(action: StageAction, role: UserRole): ForbiddenException {
+  private productActionForbidden(
+    action: StageAction,
+    role: UserRole,
+  ): ForbiddenException {
     return new ForbiddenException({
       code: 'PRODUCT_ACTION_FORBIDDEN',
       message: `Role ${role} cannot ${action.toLowerCase()} this product.`,
     });
   }
 
-  private stageFourActionForbidden(input: AuthorizationInput): ForbiddenException {
+  private stageFourActionForbidden(
+    input: AuthorizationInput,
+  ): ForbiddenException {
     return new ForbiddenException({
       code: 'STAGE_FOUR_TEMPLATE_ACTION_FORBIDDEN',
       message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} ${input.resource.toLowerCase()}.`,
     });
   }
 
-  private stageFiveActionForbidden(input: AuthorizationInput): ForbiddenException {
+  private stageFiveActionForbidden(
+    input: AuthorizationInput,
+  ): ForbiddenException {
     return new ForbiddenException({
       code: 'STAGE_FIVE_TEMPLATE_ACTION_FORBIDDEN',
       message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} ${input.resource.toLowerCase()}.`,
     });
   }
 
-  private stageSixActionForbidden(input: AuthorizationInput): ForbiddenException {
+  private stageSixActionForbidden(
+    input: AuthorizationInput,
+  ): ForbiddenException {
     return new ForbiddenException({
       code: 'STAGE_SIX_TEMPLATE_ACTION_FORBIDDEN',
       message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} ${input.resource.toLowerCase()}.`,

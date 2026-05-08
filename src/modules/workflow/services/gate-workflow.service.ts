@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 
 import { AuditAction } from '../../../enums/audit-action.enum';
@@ -15,7 +19,10 @@ import type { GateDecisionRecord } from '../../gate-decisions/types/gate-decisio
 import { ProductsRepository } from '../../products/repositories/products.repository';
 import type { ProductRecord } from '../../products/types/product-record.type';
 import { StageOneCompletionService } from './stage-one-completion.service';
+import { StageFiveCompletionService } from './stage-five-completion.service';
+import { StageFourCompletionService } from './stage-four-completion.service';
 import { StageThreeCompletionService } from './stage-three-completion.service';
+import { StageSixCompletionService } from './stage-six-completion.service';
 import { StageTwoCompletionService } from './stage-two-completion.service';
 
 type GateWorkflowResult = {
@@ -36,6 +43,9 @@ export class GateWorkflowService {
     private readonly stageOneCompletionService: StageOneCompletionService,
     private readonly stageTwoCompletionService: StageTwoCompletionService,
     private readonly stageThreeCompletionService: StageThreeCompletionService,
+    private readonly stageFourCompletionService: StageFourCompletionService,
+    private readonly stageFiveCompletionService: StageFiveCompletionService,
+    private readonly stageSixCompletionService: StageSixCompletionService,
   ) {}
 
   async transition(
@@ -139,7 +149,10 @@ export class GateWorkflowService {
     }
   }
 
-  private async assertStageRequirements(product: ProductRecord, action: GateAction): Promise<void> {
+  private async assertStageRequirements(
+    product: ProductRecord,
+    action: GateAction,
+  ): Promise<void> {
     if (product.currentStage === ProductStage.STAGE_1) {
       if (action === 'SUBMIT' || action === 'APPROVE') {
         await this.stageOneCompletionService.assertReadyForGateOne(product.id);
@@ -150,11 +163,15 @@ export class GateWorkflowService {
 
     if (product.currentStage === ProductStage.STAGE_2) {
       if (action === 'SUBMIT') {
-        await this.stageTwoCompletionService.assertReadyForGateTwoSubmission(product.id);
+        await this.stageTwoCompletionService.assertReadyForGateTwoSubmission(
+          product.id,
+        );
       }
 
       if (action === 'APPROVE') {
-        await this.stageTwoCompletionService.assertReadyForGateTwoApproval(product.id);
+        await this.stageTwoCompletionService.assertReadyForGateTwoApproval(
+          product.id,
+        );
       }
 
       return;
@@ -162,11 +179,63 @@ export class GateWorkflowService {
 
     if (product.currentStage === ProductStage.STAGE_3) {
       if (action === 'SUBMIT') {
-        await this.stageThreeCompletionService.assertReadyForGateThreeSubmission(product.id);
+        await this.stageThreeCompletionService.assertReadyForGateThreeSubmission(
+          product.id,
+        );
       }
 
       if (action === 'APPROVE') {
-        await this.stageThreeCompletionService.assertReadyForGateThreeApproval(product.id);
+        await this.stageThreeCompletionService.assertReadyForGateThreeApproval(
+          product.id,
+        );
+      }
+
+      return;
+    }
+
+    if (product.currentStage === ProductStage.STAGE_4) {
+      if (action === 'SUBMIT') {
+        await this.stageFourCompletionService.assertReadyForStageFourSubmission(
+          product.id,
+        );
+      }
+
+      if (action === 'APPROVE') {
+        await this.stageFourCompletionService.assertReadyForStageFourApproval(
+          product.id,
+        );
+      }
+
+      return;
+    }
+
+    if (product.currentStage === ProductStage.STAGE_5) {
+      if (action === 'SUBMIT') {
+        await this.stageFiveCompletionService.assertReadyForStageFiveSubmission(
+          product.id,
+        );
+      }
+
+      if (action === 'APPROVE') {
+        await this.stageFiveCompletionService.assertReadyForStageFiveApproval(
+          product.id,
+        );
+      }
+
+      return;
+    }
+
+    if (product.currentStage === ProductStage.STAGE_6) {
+      if (action === 'SUBMIT') {
+        await this.stageSixCompletionService.assertReadyForStageSixSubmission(
+          product.id,
+        );
+      }
+
+      if (action === 'APPROVE') {
+        await this.stageSixCompletionService.assertReadyForStageSixApproval(
+          product.id,
+        );
       }
 
       return;
@@ -184,25 +253,37 @@ export class GateWorkflowService {
   ): { currentStage: ProductStage; status: ProductStatus } {
     switch (action) {
       case 'SUBMIT':
-        this.assertCurrentStatus(action, product.status, [ProductStatus.DRAFT, ProductStatus.REJECTED]);
+        this.assertCurrentStatus(action, product.status, [
+          ProductStatus.DRAFT,
+          ProductStatus.REJECTED,
+        ]);
         return {
           currentStage: product.currentStage,
           status: ProductStatus.IN_REVIEW,
         };
       case 'APPROVE':
-        this.assertCurrentStatus(action, product.status, [ProductStatus.IN_REVIEW]);
+        this.assertCurrentStatus(action, product.status, [
+          ProductStatus.IN_REVIEW,
+        ]);
         return {
           currentStage: this.getNextStage(product.currentStage),
-          status: ProductStatus.DRAFT,
+          status:
+            product.currentStage === ProductStage.STAGE_6
+              ? ProductStatus.APPROVED
+              : ProductStatus.DRAFT,
         };
       case 'REJECT':
-        this.assertCurrentStatus(action, product.status, [ProductStatus.IN_REVIEW]);
+        this.assertCurrentStatus(action, product.status, [
+          ProductStatus.IN_REVIEW,
+        ]);
         return {
           currentStage: product.currentStage,
           status: ProductStatus.REJECTED,
         };
       case 'KILL':
-        this.assertCurrentStatus(action, product.status, [ProductStatus.IN_REVIEW]);
+        this.assertCurrentStatus(action, product.status, [
+          ProductStatus.IN_REVIEW,
+        ]);
         return {
           currentStage: product.currentStage,
           status: ProductStatus.KILLED,
@@ -268,6 +349,10 @@ export class GateWorkflowService {
         return ProductStage.STAGE_3;
       case ProductStage.STAGE_3:
         return ProductStage.STAGE_4;
+      case ProductStage.STAGE_4:
+        return ProductStage.STAGE_5;
+      case ProductStage.STAGE_5:
+        return ProductStage.STAGE_6;
       default:
         return stage;
     }

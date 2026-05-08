@@ -295,7 +295,7 @@ Decision: Stage 5 is Portfolio Review / Lifecycle Decisioning after Day 30 monit
 - [x] Allow repeated scorecard records but one active revamp/EOL recommendation per product
 - [x] Auto-flag repeated C-class products
 - [x] Block EOL execution until a Stage 5 EOL recommendation is approved. Decision: enforced in Stage 6 creation rules.
-- [x] Decide whether Stage 5 needs explicit `gate-5` endpoints or review/action endpoints only. Decision: review/action endpoints only.
+- [x] Decide whether Stage 5 needs explicit `gate-5` endpoints or review/action endpoints only. Decision: expose explicit Stage 5 lifecycle workflow endpoints so the frontend can submit, approve, reject, and audit portfolio decisions through the same workflow boundary as earlier gates.
 
 ---
 

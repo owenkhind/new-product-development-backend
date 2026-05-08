@@ -29,7 +29,12 @@ export class GateWorkflowController {
     @Body() input: WorkflowTransitionRequestDto,
     @Req() request: Request,
   ): Promise<GateWorkflowResponseDto> {
-    const result = await this.gateWorkflowService.transition(productId, 'SUBMIT', request.user!, input);
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'SUBMIT',
+      request.user!,
+      input,
+    );
     return GateWorkflowResponseDto.fromRecords(result);
   }
 
@@ -40,7 +45,12 @@ export class GateWorkflowController {
     @Body() input: WorkflowTransitionRequestDto,
     @Req() request: Request,
   ): Promise<GateWorkflowResponseDto> {
-    const result = await this.gateWorkflowService.transition(productId, 'APPROVE', request.user!, input);
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'APPROVE',
+      request.user!,
+      input,
+    );
     return GateWorkflowResponseDto.fromRecords(result);
   }
 
@@ -51,7 +61,12 @@ export class GateWorkflowController {
     @Body() input: WorkflowTransitionRequestDto,
     @Req() request: Request,
   ): Promise<GateWorkflowResponseDto> {
-    const result = await this.gateWorkflowService.transition(productId, 'REJECT', request.user!, input);
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'REJECT',
+      request.user!,
+      input,
+    );
     return GateWorkflowResponseDto.fromRecords(result);
   }
 
@@ -62,7 +77,12 @@ export class GateWorkflowController {
     @Body() input: WorkflowTransitionRequestDto,
     @Req() request: Request,
   ): Promise<GateWorkflowResponseDto> {
-    const result = await this.gateWorkflowService.transition(productId, 'KILL', request.user!, input);
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'KILL',
+      request.user!,
+      input,
+    );
     return GateWorkflowResponseDto.fromRecords(result);
   }
 
@@ -73,7 +93,12 @@ export class GateWorkflowController {
     @Body() input: WorkflowTransitionRequestDto,
     @Req() request: Request,
   ): Promise<GateWorkflowResponseDto> {
-    const result = await this.gateWorkflowService.transition(productId, 'SUBMIT', request.user!, input);
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'SUBMIT',
+      request.user!,
+      input,
+    );
     return GateWorkflowResponseDto.fromRecords(result);
   }
 
@@ -84,7 +109,12 @@ export class GateWorkflowController {
     @Body() input: WorkflowTransitionRequestDto,
     @Req() request: Request,
   ): Promise<GateWorkflowResponseDto> {
-    const result = await this.gateWorkflowService.transition(productId, 'APPROVE', request.user!, input);
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'APPROVE',
+      request.user!,
+      input,
+    );
     return GateWorkflowResponseDto.fromRecords(result);
   }
 
@@ -95,7 +125,12 @@ export class GateWorkflowController {
     @Body() input: WorkflowTransitionRequestDto,
     @Req() request: Request,
   ): Promise<GateWorkflowResponseDto> {
-    const result = await this.gateWorkflowService.transition(productId, 'REJECT', request.user!, input);
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'REJECT',
+      request.user!,
+      input,
+    );
     return GateWorkflowResponseDto.fromRecords(result);
   }
 
@@ -106,7 +141,12 @@ export class GateWorkflowController {
     @Body() input: WorkflowTransitionRequestDto,
     @Req() request: Request,
   ): Promise<GateWorkflowResponseDto> {
-    const result = await this.gateWorkflowService.transition(productId, 'KILL', request.user!, input);
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'KILL',
+      request.user!,
+      input,
+    );
     return GateWorkflowResponseDto.fromRecords(result);
   }
 
@@ -117,7 +157,12 @@ export class GateWorkflowController {
     @Body() input: WorkflowTransitionRequestDto,
     @Req() request: Request,
   ): Promise<GateWorkflowResponseDto> {
-    const result = await this.gateWorkflowService.transition(productId, 'SUBMIT', request.user!, input);
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'SUBMIT',
+      request.user!,
+      input,
+    );
     return GateWorkflowResponseDto.fromRecords(result);
   }
 
@@ -128,7 +173,12 @@ export class GateWorkflowController {
     @Body() input: WorkflowTransitionRequestDto,
     @Req() request: Request,
   ): Promise<GateWorkflowResponseDto> {
-    const result = await this.gateWorkflowService.transition(productId, 'APPROVE', request.user!, input);
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'APPROVE',
+      request.user!,
+      input,
+    );
     return GateWorkflowResponseDto.fromRecords(result);
   }
 
@@ -139,7 +189,12 @@ export class GateWorkflowController {
     @Body() input: WorkflowTransitionRequestDto,
     @Req() request: Request,
   ): Promise<GateWorkflowResponseDto> {
-    const result = await this.gateWorkflowService.transition(productId, 'REJECT', request.user!, input);
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'REJECT',
+      request.user!,
+      input,
+    );
     return GateWorkflowResponseDto.fromRecords(result);
   }
 
@@ -150,7 +205,204 @@ export class GateWorkflowController {
     @Body() input: WorkflowTransitionRequestDto,
     @Req() request: Request,
   ): Promise<GateWorkflowResponseDto> {
-    const result = await this.gateWorkflowService.transition(productId, 'KILL', request.user!, input);
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'KILL',
+      request.user!,
+      input,
+    );
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-4/submit')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.SUBMIT)
+  async submitGateFour(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'SUBMIT',
+      request.user!,
+      input,
+    );
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-4/approve')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.APPROVE)
+  async approveGateFour(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'APPROVE',
+      request.user!,
+      input,
+    );
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-4/reject')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.REJECT)
+  async rejectGateFour(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'REJECT',
+      request.user!,
+      input,
+    );
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-4/kill')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.KILL)
+  async killGateFour(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'KILL',
+      request.user!,
+      input,
+    );
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-5/submit')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.SUBMIT)
+  async submitGateFive(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'SUBMIT',
+      request.user!,
+      input,
+    );
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-5/approve')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.APPROVE)
+  async approveGateFive(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'APPROVE',
+      request.user!,
+      input,
+    );
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-5/reject')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.REJECT)
+  async rejectGateFive(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'REJECT',
+      request.user!,
+      input,
+    );
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-5/kill')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.KILL)
+  async killGateFive(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'KILL',
+      request.user!,
+      input,
+    );
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-6/submit')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.SUBMIT)
+  async submitGateSix(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'SUBMIT',
+      request.user!,
+      input,
+    );
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-6/approve')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.APPROVE)
+  async approveGateSix(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'APPROVE',
+      request.user!,
+      input,
+    );
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-6/reject')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.REJECT)
+  async rejectGateSix(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'REJECT',
+      request.user!,
+      input,
+    );
+    return GateWorkflowResponseDto.fromRecords(result);
+  }
+
+  @Post('gate-6/kill')
+  @Authorize(PolicyResource.GATE_WORKFLOW, StageAction.KILL)
+  async killGateSix(
+    @Param('productId') productId: string,
+    @Body() input: WorkflowTransitionRequestDto,
+    @Req() request: Request,
+  ): Promise<GateWorkflowResponseDto> {
+    const result = await this.gateWorkflowService.transition(
+      productId,
+      'KILL',
+      request.user!,
+      input,
+    );
     return GateWorkflowResponseDto.fromRecords(result);
   }
 
@@ -161,7 +413,12 @@ export class GateWorkflowController {
     @Body() input: WorkflowTransitionRequestDto,
     @Req() request: Request,
   ): Promise<GateTwoReviewResponseDto> {
-    const result = await this.gateTwoReviewsService.recordReview(productId, 'QA', request.user!, input);
+    const result = await this.gateTwoReviewsService.recordReview(
+      productId,
+      'QA',
+      request.user!,
+      input,
+    );
     return GateTwoReviewResponseDto.fromRecords(result);
   }
 
@@ -188,7 +445,12 @@ export class GateWorkflowController {
     @Body() input: WorkflowTransitionRequestDto,
     @Req() request: Request,
   ): Promise<GateTwoReviewResponseDto> {
-    const result = await this.gateTwoReviewsService.recordReview(productId, 'GM', request.user!, input);
+    const result = await this.gateTwoReviewsService.recordReview(
+      productId,
+      'GM',
+      request.user!,
+      input,
+    );
     return GateTwoReviewResponseDto.fromRecords(result);
   }
 
@@ -231,7 +493,12 @@ export class GateWorkflowController {
     @Body() input: WorkflowTransitionRequestDto,
     @Req() request: Request,
   ): Promise<GateThreeReviewResponseDto> {
-    const result = await this.gateThreeReviewsService.recordReview(productId, 'GM', request.user!, input);
+    const result = await this.gateThreeReviewsService.recordReview(
+      productId,
+      'GM',
+      request.user!,
+      input,
+    );
     return GateThreeReviewResponseDto.fromRecords(result);
   }
 }
