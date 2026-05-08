@@ -8,6 +8,20 @@ import { LoggingInterceptor } from './interceptors/logging.interceptor';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
+  const configuredOrigins = (process.env.FRONTEND_ORIGIN ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  app.enableCors({
+    credentials: true,
+    origin:
+      configuredOrigins.length > 0
+        ? configuredOrigins
+        : process.env.NODE_ENV === 'production'
+          ? false
+          : true,
+  });
   app.setGlobalPrefix('v1');
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalInterceptors(new LoggingInterceptor());
