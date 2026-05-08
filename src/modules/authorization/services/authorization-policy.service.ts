@@ -32,6 +32,9 @@ export class AuthorizationPolicyService {
     }
 
     switch (input.resource) {
+      case PolicyResource.APPROVALS:
+        this.assertApprovalsAccess(input);
+        return;
       case PolicyResource.USERS:
         this.assertUsersAccess(input);
         return;
@@ -77,6 +80,25 @@ export class AuthorizationPolicyService {
           message: `Authorization rules for ${input.resource} are not implemented.`,
         });
     }
+  }
+
+  private assertApprovalsAccess(input: AuthorizationInput): void {
+    if (
+      input.action === StageAction.VIEW &&
+      [
+        UserRole.ADMIN,
+        UserRole.HEAD_OF_PRODUCT,
+        UserRole.GM_COMMERCIAL_OWNER,
+        UserRole.COO_EXECUTIVE_APPROVER,
+      ].includes(input.actor.role)
+    ) {
+      return;
+    }
+
+    throw new ForbiddenException({
+      code: 'APPROVAL_QUEUE_ACTION_FORBIDDEN',
+      message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} the approval queue.`,
+    });
   }
 
   private assertUsersAccess(input: AuthorizationInput): void {

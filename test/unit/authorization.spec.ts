@@ -870,6 +870,44 @@ describe('AuthorizationPolicyService', () => {
     );
   });
 
+  it('allows gate approvers to view the approval queue and rejects contributor-only roles', async () => {
+    const service = new AuthorizationPolicyService({} as never, {} as never);
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.VIEW,
+        actor: {
+          id: testIds.cooApprover,
+          role: UserRole.COO_EXECUTIVE_APPROVER,
+        },
+        resource: PolicyResource.APPROVALS,
+      }),
+    );
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.VIEW,
+        actor: {
+          id: testIds.headOfProduct,
+          role: UserRole.HEAD_OF_PRODUCT,
+        },
+        resource: PolicyResource.APPROVALS,
+      }),
+    );
+
+    await assert.rejects(
+      service.assertAuthorized({
+        action: StageAction.VIEW,
+        actor: {
+          id: testIds.financeOwner,
+          role: UserRole.FINANCE_MANAGER,
+        },
+        resource: PolicyResource.APPROVALS,
+      }),
+      ForbiddenException,
+    );
+  });
+
   it('allows users to view themselves and rejects access to other user records', async () => {
     const service = new AuthorizationPolicyService({} as never, {} as never);
 

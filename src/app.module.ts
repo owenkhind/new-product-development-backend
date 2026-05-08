@@ -5,6 +5,7 @@ import { DatabaseModule } from './database/database.module';
 import { envValidationSchema } from './config/env.validation';
 import { RequestIdMiddleware } from './middleware/request-id.middleware';
 import { AuthModule } from './modules/auth/auth.module';
+import { ApprovalsModule } from './modules/approvals/approvals.module';
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { BusinessCasesModule } from './modules/business-cases/business-cases.module';
 import { ChannelListingPlansModule } from './modules/channel-listing-plans/channel-listing-plans.module';
@@ -36,6 +37,7 @@ import { WorkflowModule } from './modules/workflow/workflow.module';
       expandVariables: true,
       validationSchema: envValidationSchema,
     }),
+    ApprovalsModule,
     AuthModule,
     DatabaseModule,
     AuditLogsModule,
