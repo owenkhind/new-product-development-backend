@@ -62,6 +62,7 @@ Deployment conclusion: the backend is solid for core workflow UAT, but not produ
 
 - [x] Add backend `/dashboard` aggregation endpoint for the command-center dashboard.
 - [x] Add backend `/templates` aggregate endpoint so the frontend template library no longer falls back to a static catalogue when mocks are disabled.
+- [x] Add backend `/rules` aggregate endpoint for workflow rules, approval authority, escalation, and GP floor visibility.
 - [ ] Add comments/notes support if reviewers need threaded discussion inside approval flows.
 - [ ] Add attachments/evidence support if certifications, supplier files, or gate evidence must be uploaded.
 - [ ] Add below-floor pricing exception approval flow for Template 7.

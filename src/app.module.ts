@@ -25,6 +25,7 @@ import { PortfolioUpdatesModule } from './modules/portfolio-updates/portfolio-up
 import { ProductScorecardsModule } from './modules/product-scorecards/product-scorecards.module';
 import { ProductsModule } from './modules/products/products.module';
 import { RevampEolRecommendationsModule } from './modules/revamp-eol-recommendations/revamp-eol-recommendations.module';
+import { RulesModule } from './modules/rules/rules.module';
 import { SupplierEvaluationsModule } from './modules/supplier-evaluations/supplier-evaluations.module';
 import { TemplatesModule } from './modules/templates/templates.module';
 import { UsersModule } from './modules/users/users.module';
@@ -61,6 +62,7 @@ import { WorkflowModule } from './modules/workflow/workflow.module';
     ProductScorecardsModule,
     ProductsModule,
     RevampEolRecommendationsModule,
+    RulesModule,
     SellInReportsModule,
     SupplierEvaluationsModule,
     TemplatesModule,

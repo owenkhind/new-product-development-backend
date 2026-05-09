@@ -38,6 +38,9 @@ export class AuthorizationPolicyService {
       case PolicyResource.TEMPLATES:
         this.assertTemplatesAccess(input);
         return;
+      case PolicyResource.RULES:
+        this.assertRulesAccess(input);
+        return;
       case PolicyResource.USERS:
         this.assertUsersAccess(input);
         return;
@@ -112,6 +115,26 @@ export class AuthorizationPolicyService {
     throw new ForbiddenException({
       code: 'TEMPLATE_LIBRARY_ACTION_FORBIDDEN',
       message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} the template library.`,
+    });
+  }
+
+  private assertRulesAccess(input: AuthorizationInput): void {
+    if (
+      input.action === StageAction.VIEW &&
+      [
+        UserRole.ADMIN,
+        UserRole.COO_EXECUTIVE_APPROVER,
+        UserRole.FINANCE_MANAGER,
+        UserRole.GM_COMMERCIAL_OWNER,
+        UserRole.SPDM_PRODUCT_OPS,
+      ].includes(input.actor.role)
+    ) {
+      return;
+    }
+
+    throw new ForbiddenException({
+      code: 'RULES_ACTION_FORBIDDEN',
+      message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} rules and guardrails.`,
     });
   }
 

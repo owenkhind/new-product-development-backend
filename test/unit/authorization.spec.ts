@@ -73,6 +73,33 @@ describe('AuthorizationPolicyService', () => {
     );
   });
 
+  it('allows policy-owner roles to view rules and guardrails', async () => {
+    const service = new AuthorizationPolicyService({} as never, {} as never);
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.VIEW,
+        actor: {
+          id: testIds.financeOwner,
+          role: UserRole.FINANCE_MANAGER,
+        },
+        resource: PolicyResource.RULES,
+      }),
+    );
+
+    await assert.rejects(
+      service.assertAuthorized({
+        action: StageAction.VIEW,
+        actor: {
+          id: testIds.productOwner,
+          role: UserRole.PRODUCT_MANAGER,
+        },
+        resource: PolicyResource.RULES,
+      }),
+      ForbiddenException,
+    );
+  });
+
   it('rejects non-product-managers from creating products', async () => {
     const service = new AuthorizationPolicyService({} as never, {} as never);
 
