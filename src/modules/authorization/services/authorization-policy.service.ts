@@ -35,6 +35,9 @@ export class AuthorizationPolicyService {
       case PolicyResource.APPROVALS:
         this.assertApprovalsAccess(input);
         return;
+      case PolicyResource.TEMPLATES:
+        this.assertTemplatesAccess(input);
+        return;
       case PolicyResource.USERS:
         this.assertUsersAccess(input);
         return;
@@ -98,6 +101,17 @@ export class AuthorizationPolicyService {
     throw new ForbiddenException({
       code: 'APPROVAL_QUEUE_ACTION_FORBIDDEN',
       message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} the approval queue.`,
+    });
+  }
+
+  private assertTemplatesAccess(input: AuthorizationInput): void {
+    if (input.action === StageAction.VIEW) {
+      return;
+    }
+
+    throw new ForbiddenException({
+      code: 'TEMPLATE_LIBRARY_ACTION_FORBIDDEN',
+      message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} the template library.`,
     });
   }
 

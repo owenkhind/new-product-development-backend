@@ -46,6 +46,33 @@ describe('AuthorizationPolicyService', () => {
     );
   });
 
+  it('allows authenticated actors to view the template library catalogue', async () => {
+    const service = new AuthorizationPolicyService({} as never, {} as never);
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.VIEW,
+        actor: {
+          id: testIds.sourcingManager,
+          role: UserRole.SOURCING_MANAGER,
+        },
+        resource: PolicyResource.TEMPLATES,
+      }),
+    );
+
+    await assert.rejects(
+      service.assertAuthorized({
+        action: StageAction.EDIT,
+        actor: {
+          id: testIds.sourcingManager,
+          role: UserRole.SOURCING_MANAGER,
+        },
+        resource: PolicyResource.TEMPLATES,
+      }),
+      ForbiddenException,
+    );
+  });
+
   it('rejects non-product-managers from creating products', async () => {
     const service = new AuthorizationPolicyService({} as never, {} as never);
 
