@@ -77,8 +77,10 @@ export class AuthorizationPolicyService {
         this.assertPortfolioUpdateAccess(input);
         return;
       case PolicyResource.GATE_DECISIONS:
-      case PolicyResource.AUDIT_LOGS:
         await this.assertProductScopedViewAccess(input);
+        return;
+      case PolicyResource.AUDIT_LOGS:
+        await this.assertAuditLogsAccess(input);
         return;
       default:
         throw new ForbiddenException({
@@ -135,6 +137,40 @@ export class AuthorizationPolicyService {
     throw new ForbiddenException({
       code: 'RULES_ACTION_FORBIDDEN',
       message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} rules and guardrails.`,
+    });
+  }
+
+  private async assertAuditLogsAccess(
+    input: AuthorizationInput,
+  ): Promise<void> {
+    if (input.action !== StageAction.VIEW) {
+      throw this.productActionForbidden(input.action, input.actor.role);
+    }
+
+    if (input.targetId) {
+      await this.assertProductScopedViewAccess(input);
+      return;
+    }
+
+    if (
+      [
+        UserRole.ADMIN,
+        UserRole.CLUSTER_MANAGER,
+        UserRole.COO_EXECUTIVE_APPROVER,
+        UserRole.FINANCE_MANAGER,
+        UserRole.GM_COMMERCIAL_OWNER,
+        UserRole.HEAD_OF_PRODUCT,
+        UserRole.MARKETING_GTM_OWNER,
+        UserRole.PRODUCT_MANAGER,
+        UserRole.QA_TSD_REVIEWER,
+      ].includes(input.actor.role)
+    ) {
+      return;
+    }
+
+    throw new ForbiddenException({
+      code: 'AUDIT_LOGS_ACTION_FORBIDDEN',
+      message: `Role ${input.actor.role} cannot ${input.action.toLowerCase()} audit logs.`,
     });
   }
 

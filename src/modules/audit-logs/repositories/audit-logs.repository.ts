@@ -6,7 +6,11 @@ import { DatabaseService } from '../../../database/database.service';
 import { qualifyTableName } from '../../../database/database-schema.util';
 import type { AuditAction } from '../../../enums/audit-action.enum';
 import type { AuditEntityType } from '../../../enums/audit-entity-type.enum';
-import type { AuditLogRecord } from '../types/audit-log-record.type';
+import { UserRole } from '../../../enums/user-role.enum';
+import type {
+  AuditDashboardRecord,
+  AuditLogRecord,
+} from '../types/audit-log-record.type';
 
 type AuditLogRow = QueryResultRow & {
   acting_as_user_id: string | null;
@@ -20,6 +24,12 @@ type AuditLogRow = QueryResultRow & {
   metadata: Record<string, unknown> | null;
   product_id: string | null;
   to_state: Record<string, unknown> | null;
+};
+
+type AuditDashboardRow = AuditLogRow & {
+  actor_name: string | null;
+  actor_role: string | null;
+  product_name: string | null;
 };
 
 type CreateAuditLogInput = {
@@ -41,13 +51,28 @@ type ListAuditLogsFilters = {
   productId: string;
 };
 
+type ListAuditDashboardFilters = {
+  actorId: string;
+  actorRole: UserRole;
+  limit: number;
+  offset: number;
+};
+
 @Injectable()
 export class AuditLogsRepository {
   private readonly tableName = qualifyTableName('audit_logs');
+  private readonly clusterAssignmentsTableName = qualifyTableName(
+    'product_cluster_assignments',
+  );
+  private readonly productsTableName = qualifyTableName('products');
+  private readonly usersTableName = qualifyTableName('users');
 
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async create(input: CreateAuditLogInput, executor?: DatabaseQueryable): Promise<AuditLogRecord> {
+  async create(
+    input: CreateAuditLogInput,
+    executor?: DatabaseQueryable,
+  ): Promise<AuditLogRecord> {
     const queryable = executor ?? this.databaseService;
 
     const result = await queryable.query<AuditLogRow>(
@@ -96,7 +121,9 @@ export class AuditLogsRepository {
     return this.mapRow(result.rows[0]);
   }
 
-  async listByProductId(filters: ListAuditLogsFilters): Promise<{ rows: AuditLogRecord[]; total: number }> {
+  async listByProductId(
+    filters: ListAuditLogsFilters,
+  ): Promise<{ rows: AuditLogRecord[]; total: number }> {
     const [countResult, rowsResult] = await Promise.all([
       this.databaseService.query<{ total: string }>(
         `
@@ -136,6 +163,96 @@ export class AuditLogsRepository {
     };
   }
 
+  async listDashboard(
+    filters: ListAuditDashboardFilters,
+  ): Promise<{ rows: AuditDashboardRecord[]; total: number }> {
+    const params: unknown[] = [];
+    const accessClause = this.buildDashboardAccessClause(filters, params);
+
+    const [countResult, rowsResult] = await Promise.all([
+      this.databaseService.query<{ total: string }>(
+        `
+          SELECT COUNT(*)::text AS total
+          FROM ${this.tableName} audit_log
+          LEFT JOIN ${this.productsTableName} product
+            ON product.id = audit_log.product_id
+          WHERE ${accessClause}
+        `,
+        params,
+      ),
+      this.databaseService.query<AuditDashboardRow>(
+        `
+          SELECT
+            audit_log.id,
+            audit_log.entity_type,
+            audit_log.entity_id,
+            audit_log.product_id,
+            audit_log.actor_user_id,
+            audit_log.acting_as_user_id,
+            audit_log.action,
+            audit_log.from_state,
+            audit_log.to_state,
+            audit_log.metadata,
+            audit_log.created_at,
+            product.working_name AS product_name,
+            actor.full_name AS actor_name,
+            actor.role AS actor_role
+          FROM ${this.tableName} audit_log
+          LEFT JOIN ${this.productsTableName} product
+            ON product.id = audit_log.product_id
+          LEFT JOIN ${this.usersTableName} actor
+            ON actor.id = audit_log.actor_user_id
+          WHERE ${accessClause}
+          ORDER BY audit_log.created_at DESC
+          LIMIT $${params.length + 1}
+          OFFSET $${params.length + 2}
+        `,
+        [...params, filters.limit, filters.offset],
+      ),
+    ]);
+
+    return {
+      rows: rowsResult.rows.map((row) => this.mapDashboardRow(row)),
+      total: Number(countResult.rows[0]?.total ?? 0),
+    };
+  }
+
+  private buildDashboardAccessClause(
+    filters: ListAuditDashboardFilters,
+    params: unknown[],
+  ): string {
+    if (this.hasGlobalAuditAccess(filters.actorRole)) {
+      return 'TRUE';
+    }
+
+    params.push(filters.actorId);
+
+    return `
+      audit_log.product_id IS NOT NULL
+      AND (
+        product.product_owner_user_id = $${params.length}
+        OR product.commercial_owner_user_id = $${params.length}
+        OR product.finance_owner_user_id = $${params.length}
+        OR product.marketing_owner_user_id = $${params.length}
+        OR EXISTS (
+          SELECT 1
+          FROM ${this.clusterAssignmentsTableName} access_cluster_assignment
+          WHERE access_cluster_assignment.product_id = product.id
+            AND access_cluster_assignment.user_id = $${params.length}
+        )
+      )
+    `;
+  }
+
+  private hasGlobalAuditAccess(role: UserRole): boolean {
+    return [
+      UserRole.ADMIN,
+      UserRole.HEAD_OF_PRODUCT,
+      UserRole.QA_TSD_REVIEWER,
+      UserRole.COO_EXECUTIVE_APPROVER,
+    ].includes(role);
+  }
+
   private mapRow(row: AuditLogRow | undefined): AuditLogRecord {
     if (!row) {
       throw new Error('Expected an audit log row but received none.');
@@ -153,6 +270,15 @@ export class AuditLogsRepository {
       metadata: row.metadata ?? {},
       productId: row.product_id,
       toState: row.to_state,
+    };
+  }
+
+  private mapDashboardRow(row: AuditDashboardRow): AuditDashboardRecord {
+    return {
+      ...this.mapRow(row),
+      actorName: row.actor_name,
+      actorRole: row.actor_role,
+      productName: row.product_name,
     };
   }
 }

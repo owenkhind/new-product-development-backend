@@ -924,6 +924,33 @@ describe('AuthorizationPolicyService', () => {
     );
   });
 
+  it('allows audit-visible roles to view the global audit dashboard', async () => {
+    const service = new AuthorizationPolicyService({} as never, {} as never);
+
+    await assert.doesNotReject(
+      service.assertAuthorized({
+        action: StageAction.VIEW,
+        actor: {
+          id: testIds.productOwner,
+          role: UserRole.PRODUCT_MANAGER,
+        },
+        resource: PolicyResource.AUDIT_LOGS,
+      }),
+    );
+
+    await assert.rejects(
+      service.assertAuthorized({
+        action: StageAction.VIEW,
+        actor: {
+          id: testIds.sourcingManager,
+          role: UserRole.SOURCING_MANAGER,
+        },
+        resource: PolicyResource.AUDIT_LOGS,
+      }),
+      ForbiddenException,
+    );
+  });
+
   it('allows gate approvers to view the approval queue and rejects contributor-only roles', async () => {
     const service = new AuthorizationPolicyService({} as never, {} as never);
 

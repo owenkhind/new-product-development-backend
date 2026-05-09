@@ -12,7 +12,7 @@ For actionable tickets with assignees and delivery dates, prefer GitHub Issues l
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Project planning         | Skill and reference docs exist under `skills/`                                                                                                                                                       |
 | Application code         | NestJS backend scaffold and modules exist                                                                                                                                                            |
-| API routes               | Stages 1-6, all 17 lifecycle templates, core platform routes, workflow transitions, approvals, and audit logs are implemented                                                                        |
+| API routes               | Stages 1-6, all 17 lifecycle templates, core platform routes, workflow transitions, approvals, audit logs, and aggregate dashboard routes are implemented                                            |
 | Database schema          | Migrations exist for users, products, workflow, stages 1-6, all 17 templates, approvals, and audit logs                                                                                              |
 | Tests                    | Unit and e2e coverage exists for implemented slices                                                                                                                                                  |
 | Auth / roles / approvals | Temporary email/password auth, signed session cookies, authorization policy, workflow transitions, role-plus-assignment checks, and approval traceability are scaffolded; SSO is not implemented yet |
@@ -63,6 +63,7 @@ Deployment conclusion: the backend is solid for core workflow UAT, but not produ
 - [x] Add backend `/dashboard` aggregation endpoint for the command-center dashboard.
 - [x] Add backend `/templates` aggregate endpoint so the frontend template library no longer falls back to a static catalogue when mocks are disabled.
 - [x] Add backend `/rules` aggregate endpoint for workflow rules, approval authority, escalation, and GP floor visibility.
+- [x] Add backend `/audit-logs` aggregate endpoint so the frontend audit page no longer fans out across product-scoped audit logs.
 - [ ] Add comments/notes support if reviewers need threaded discussion inside approval flows.
 - [ ] Add attachments/evidence support if certifications, supplier files, or gate evidence must be uploaded.
 - [ ] Add below-floor pricing exception approval flow for Template 7.
