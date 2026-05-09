@@ -12,6 +12,7 @@ import { ChannelListingPlansModule } from './modules/channel-listing-plans/chann
 import { ChannelPricingModule } from './modules/channel-pricing/channel-pricing.module';
 import { ClearancePlansModule } from './modules/clearance-plans/clearance-plans.module';
 import { CompetitorMatricesModule } from './modules/competitor-matrices/competitor-matrices.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { Day30ReviewsModule } from './modules/day-30-reviews/day-30-reviews.module';
 import { EolExecutionPlansModule } from './modules/eol-execution-plans/eol-execution-plans.module';
 import { GateDecisionsModule } from './modules/gate-decisions/gate-decisions.module';
@@ -47,6 +48,7 @@ import { WorkflowModule } from './modules/workflow/workflow.module';
     ChannelPricingModule,
     ClearancePlansModule,
     CompetitorMatricesModule,
+    DashboardModule,
     Day30ReviewsModule,
     EolExecutionPlansModule,
     GateDecisionsModule,
